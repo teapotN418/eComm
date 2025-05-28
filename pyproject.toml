@@ -1,0 +1,6 @@
+[project]
+name = "fastapi_users"
+version = "0.1.0"
+description = ""
+authors = ["Maxim <maximkuts23@mail.ru>"]
+readme = "README.md"
