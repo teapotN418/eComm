@@ -1,20 +1,16 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  web:
+  users:
     container_name: fastapi_users
     build:
-      context: .
-      args:
-          REQUIREMENTS_FILE: reqs.txt
-    command: uvicorn src.app.main:app --port 8000 --host 0.0.0.0
-    volumes:
-      - .:/app
+      context: ./users_service
     ports:
       - "${BACKEND_PORT}:8000"
     depends_on:
       postgres:
         condition: service_healthy
+
   postgres:
     image: postgres:15-alpine
     ports:
