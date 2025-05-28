@@ -7,6 +7,8 @@ services:
       context: ./users_service
     ports:
       - "${BACKEND_PORT}:8000"
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
