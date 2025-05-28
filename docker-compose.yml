@@ -9,6 +9,9 @@ services:
       - "${BACKEND_PORT}:8000"
     env_file:
       - .env
+    volumes:
+      - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
+      - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
     depends_on:
       postgres:
         condition: service_healthy
