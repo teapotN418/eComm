@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     VERSION: str = PYPROJECT_CONTENT["version"]
     DESCRIPTION: str = PYPROJECT_CONTENT["description"]
 
-    BACKEND_PORT: str = Field(alias="USERS_PORT")
+    BACKEND_PORT: str = Field(alias="AUTH_PORT")
 
     POSTGRES_PORT: str = Field(alias="USERS_POSTGRES_PORT")
     POSTGRES_USER: str
