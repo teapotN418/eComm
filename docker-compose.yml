@@ -1,6 +1,18 @@
 version: '3.9'
 
 services:
+  minio_service:
+    container_name: fastapi_minio
+    build:
+      context: ./minio_service
+    ports:
+      - "${MINIO_PORT}:8000"
+    env_file:
+      - .env
+    #volumes:
+    #  - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
+    #  - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
+
   auth_service:
     container_name: auth_service
     build:
@@ -15,6 +27,7 @@ services:
     depends_on:
       users_postgres:
         condition: service_healthy
+
   users_service:
     container_name: users_service
     build:
@@ -23,9 +36,9 @@ services:
       - "${USERS_PORT}:8000"
     env_file:
       - .env
-#    volumes:
-#      - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
-#      - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
+    #volumes:
+    #  - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
+    #  - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
     depends_on:
       users_postgres:
         condition: service_healthy
