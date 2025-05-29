@@ -5,10 +5,8 @@ services:
     container_name: auth_service
     build:
       context: ./auth_service
-      args:
-        - PORT=${AUTH_PORT}
     ports:
-      - "${AUTH_PORT}:${AUTH_PORT}"
+      - "${AUTH_PORT}:8000"
     env_file:
       - .env
 #    volumes:
@@ -21,10 +19,8 @@ services:
     container_name: users_service
     build:
       context: ./users_service
-      args:
-        - PORT=${USERS_PORT}
     ports:
-      - "${USERS_PORT}:${USERS_PORT}"
+      - "${USERS_PORT}:8000"
     env_file:
       - .env
 #    volumes:
