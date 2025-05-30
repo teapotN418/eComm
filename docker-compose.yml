@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   minio_service:
-    container_name: fastapi_minio
+    container_name: minio_service
     build:
       context: ./minio_service
     ports:

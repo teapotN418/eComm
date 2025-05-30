@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
 import src.app.api.endpoints as endpoints
 from src.app.core.config import settings
+from src.app.services.async_minio import MinioServerAsync
+
 
 tags_metadata = [
     {"name": "no-auth", "description": "Operations for everyone"},
-    {"name": "authenticated", "description": "Operations for all authenticated"},
-    {"name": "admin", "description": "Operations for admins only"},
 ]
 
 origins = [
@@ -30,4 +31,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(endpoints.router, prefix="/users")
+app.include_router(endpoints.router, prefix="/files")

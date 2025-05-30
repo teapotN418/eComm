@@ -45,3 +45,4 @@ minio==7.2.15
 pycparser==2.22
 pycryptodome==3.23.0
 urllib3==2.4.0
+miniopy-async==1.23.0

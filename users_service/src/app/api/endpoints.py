@@ -75,7 +75,7 @@ async def update_profile(
 )
 async def delete_profile(
     user_id: int,
-    response: Response,
+    # response: Response,
     db: AsyncSession = Depends(get_db),
 ):
     user = await crud.get_user(user_id=user_id, session=db)
@@ -84,8 +84,8 @@ async def delete_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     await crud.delete_user(user, session=db)
-    response.delete_cookie(security.security_config.JWT_ACCESS_COOKIE_NAME, security.security_config.JWT_ACCESS_COOKIE_PATH)
-    response.delete_cookie(security.security_config.JWT_REFRESH_COOKIE_NAME, security.security_config.JWT_REFRESH_COOKIE_PATH)
+    # response.delete_cookie(security.security_config.JWT_ACCESS_COOKIE_NAME, security.security_config.JWT_ACCESS_COOKIE_PATH)
+    # response.delete_cookie(security.security_config.JWT_REFRESH_COOKIE_NAME, security.security_config.JWT_REFRESH_COOKIE_PATH)
     # ЖЕЛАТЕЛЬНО КОНЕЧНО ТОКЕНЫ ЕЩЁ ДОБАВЛЯТЬ В REVOKED
     return {"detail": "User deleted"}
 
