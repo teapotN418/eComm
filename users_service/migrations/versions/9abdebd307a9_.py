@@ -8,7 +8,6 @@ Create Date: 2025-05-21 08:58:23.465318
 from alembic import op
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
 revision = '9abdebd307a9'
 down_revision = None
@@ -25,6 +24,21 @@ def upgrade():
     sa.Column('role', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
+    )
+    users_table = sa.table(
+        'users',
+        sa.column('email', sa.String),
+        sa.column('hashed_password', sa.String),
+        sa.column('role', sa.String)
+    )
+    op.bulk_insert(users_table,
+        [
+            {
+                'email': 'admin@mail.ru',
+                'hashed_password': '$2b$12$9ySzhh7jLaWCQ3pFi5c8j.aQZVq2RYfOzb6SJNyazkLkj4v2Kmmlu',
+                'role': 'admin'
+            }
+        ]
     )
     # ### end Alembic commands ###
 
