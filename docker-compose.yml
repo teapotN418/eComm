@@ -1,0 +1,71 @@
+
+version: "3.9"
+
+services:
+  postgres:
+    image: debezium/postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shop
+    ports:
+      - "5433:5432"
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_replication_slots=4"
+      - "-c"
+      - "max_wal_senders=4"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  connect:
+    image: debezium/connect:2.6
+    container_name: connect
+    ports:
+      - "8083:8083"
+    environment:
+      REST_ADVERTISED_HOST_NAME: "0.0.0.0" 
+      REST_HOST_NAME: "0.0.0.0" 
+      REST_PORT: "8083"
+
+      BOOTSTRAP_SERVERS: "demo13b.ddnsfree.com:19093"  # Kafka
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      
+      # ВАЖНО! НЕ МЕНЯТЬ
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      
+      # плагины Elasticsearch и PostgreSQL
+      CONNECT_PLUGIN_PATH: "/kafka/connect,/kafka/connect/debezium-connector-postgres,/kafka/connect/plugins"
+    volumes:
+      - ./connector-plugins:/kafka/connect/plugins
+    depends_on:
+      - postgres
+
+  elasticsearch:
+    image: elasticsearch:7.17.10
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+#   kibana:  
+#     image: elastic/kibana:7.17.10
+#     ports:
+#       - "5601:5601"
+#     depends_on:
+#       - elasticsearch
+
+volumes:
+  esdata:
+  pgdata:
