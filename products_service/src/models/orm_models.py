@@ -3,7 +3,7 @@ from sqlalchemy import String, BigInteger, Float, ForeignKey
 from src.repository.db import Base
 
 
-class Providers(Base):
+class Provider(Base):
     __tablename__ = 'providers'
 
     id = mapped_column(BigInteger, primary_key=True)
@@ -18,7 +18,7 @@ class Providers(Base):
     )
 
 
-class Categories(Base):
+class Category(Base):
     __tablename__ = 'categories'
 
     id = mapped_column(BigInteger, primary_key=True)
@@ -43,11 +43,11 @@ class Product(Base):
     category_id = mapped_column(BigInteger, ForeignKey('categories.id'))
 
     provider = relationship(
-        'Providers',
+        'Provider',
         back_populates='products'
     )
 
     category = relationship(
-        'Categories',
+        'Category',
         back_populates='products'
     )
