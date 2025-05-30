@@ -15,5 +15,8 @@ class Config:
 
     GATEWAY_URL = os.getenv('GATEWAY_URL', 'localhost')
 
+    ES_HOSTS = [os.getenv('ES_HOST', 'localhost')]
+    ES_INDEX = os.getenv('ES_INDEX', 'products')
+
 
 config = Config()

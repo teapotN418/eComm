@@ -1,10 +1,13 @@
 from fastapi import APIRouter, HTTPException
+from elasticsearch import AsyncElasticsearch
 
 from src.repository.products import products_repo
 from src.models.pydantic_schemas import ProductOut, ProductIn
 from src.models.orm_models import Product
+from src.config import config
 
 router = APIRouter()
+es_client = AsyncElasticsearch(hosts=config.ES_HOSTS)
 
 
 @router.get('/', tags=['unauthorized'], response_model=list[ProductOut])
@@ -19,6 +22,13 @@ async def get_product(id: int):
     if product == None:
         raise HTTPException(404, 'Product not found')
     return product
+
+
+@router.get('/search', tags=['unauthorized'], response_model=list[ProductOut])
+async def get_products(string: str):
+    es_query = {}
+
+    result = await es_client.search(index=config.ES_INDEX, body=es_query)
 
 
 @router.post(
