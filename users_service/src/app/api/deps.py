@@ -10,7 +10,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 async def set_response_state(request: Request, payload):
-    request.state.sub = payload.sub
+    request.state.sub = int(payload.sub)
     request.state.data = payload.model_dump(include="role")
 
 async def require_access(request: Request):

@@ -16,23 +16,5 @@ security_obj = AuthX(config=security_config)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-async def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
 async def get_password_hash(password):
     return pwd_context.hash(password)
-
-async def create_tokens(email: str, data: dict):
-    to_encode = data.copy()
-
-    access_token = security_obj.create_access_token(email, data = to_encode, fresh=True)
-    refresh_token = security_obj.create_refresh_token(email, data = to_encode)
-
-    return (access_token, refresh_token)
-
-async def refresh_access_token(email: str, data: dict):
-    to_encode = data.copy()
-    
-    access_token = security_obj.create_access_token(email, data = to_encode, fresh=False)
-    
-    return access_token

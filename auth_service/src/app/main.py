@@ -30,4 +30,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(endpoints.router, prefix="/users")
+app.include_router(endpoints.router, prefix="/auth")

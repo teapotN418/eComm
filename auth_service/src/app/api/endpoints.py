@@ -12,7 +12,7 @@ from src.app.api.deps import require_access, require_refresh, get_db, AsyncSessi
 
 router = APIRouter()
 
-@router.post("/auth/login", 
+@router.post("/login", 
 )
 async def login(
     form_data: UserAuth,
@@ -37,7 +37,7 @@ async def login(
 
 
 
-@router.post("/auth/verify",
+@router.post("/verify",
     tags=["authenticated"],
     response_model=UserVerify, 
     dependencies=[Depends(require_access)],
@@ -48,7 +48,8 @@ async def verify_token(
     return UserVerify(id=request.state.sub, role=request.state.data.get("role"))
 
 
-@router.post("/auth/verify-role",
+
+@router.post("/verify-role",
     tags=["authenticated"],
     response_model=ID, 
     dependencies=[Depends(require_access)],
@@ -65,7 +66,8 @@ async def verify_token_role(
         )
 
 
-@router.post("/auth/refresh",
+
+@router.post("/refresh",
     tags=["authenticated"],
     dependencies=[Depends(require_refresh)],    
 )
@@ -79,16 +81,13 @@ async def refresh_access_token(
 
 
 
-async def logout_func(response: Response):
-    response.delete_cookie(security.security_config.JWT_ACCESS_COOKIE_NAME, security.security_config.JWT_ACCESS_COOKIE_PATH)
-    response.delete_cookie(security.security_config.JWT_REFRESH_COOKIE_NAME, security.security_config.JWT_REFRESH_COOKIE_PATH)
-    # ЖЕЛАТЕЛЬНО КОНЕЧНО ТОКЕНЫ ЕЩЁ ДОБАВЛЯТЬ В REVOKED
-
-@router.post("/auth/logout", 
+@router.post("/logout", 
     tags=["authenticated"],
 )
 async def logout(
     response: Response,
 ):
-    await logout_func(response)
+    response.delete_cookie(security.security_config.JWT_ACCESS_COOKIE_NAME, security.security_config.JWT_ACCESS_COOKIE_PATH)
+    response.delete_cookie(security.security_config.JWT_REFRESH_COOKIE_NAME, security.security_config.JWT_REFRESH_COOKIE_PATH)
+    # ЖЕЛАТЕЛЬНО КОНЕЧНО ТОКЕНЫ ЕЩЁ ДОБАВЛЯТЬ В REVOKED
     return {"detail": "Cookies removed"}
