@@ -14,11 +14,11 @@ class Settings(BaseSettings):
 
     BACKEND_PORT: str = Field(alias="USERS_PORT")
 
+    POSTGRES_HOST: str = Field(alias="USERS_POSTGRES_HOST")
     POSTGRES_PORT: str = Field(alias="USERS_POSTGRES_PORT")
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_HOST: str
-    POSTGRES_DB: str
+    POSTGRES_DB: str = Field(alias="USERS_POSTGRES_DB")
+    POSTGRES_USER: str = Field(alias="USERS_POSTGRES_USER")
+    POSTGRES_PASSWORD: str = Field(alias="USERS_POSTGRES_PASSWORD")
 
     @property
     def DATABASE_URL(self):
