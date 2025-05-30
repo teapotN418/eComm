@@ -12,7 +12,8 @@ from src.app.api.deps import require_access, require_refresh, get_db, AsyncSessi
 
 router = APIRouter()
 
-@router.post("/login", 
+@router.post("/login",
+    tags=["no-auth"],
 )
 async def login(
     form_data: UserAuth,

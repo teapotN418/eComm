@@ -8,9 +8,6 @@ with open(f"{PROJECT_DIR}/pyproject.toml", "rb") as f:
     PYPROJECT_CONTENT = tomllib.load(f)["project"]
 
 class Settings(BaseSettings):
-    ALGORITHM: str
-    SECRET_KEY: str
-
     PROJECT_NAME: str = PYPROJECT_CONTENT["name"]
     VERSION: str = PYPROJECT_CONTENT["version"]
     DESCRIPTION: str = PYPROJECT_CONTENT["description"]
