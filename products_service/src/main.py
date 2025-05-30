@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from src.config import config
-from src.router import router
+from src.routers.products import router as products_router
+from src.routers.providers import router as providers_router
+from src.routers.categories import router as categories_router
 
 openapi_tags = [
     {'name': 'unauthorized', 'description': 'Does not require authorization'},
@@ -21,4 +23,6 @@ app.add_middleware(
     allow_headers=['*']
 )
 
-app.include_router(router, prefix='/api/products')
+app.include_router(products_router, prefix='/api/products')
+app.include_router(providers_router, prefix='/api/providers')
+app.include_router(categories_router, prefix='/api/categories')
