@@ -1,131 +1,167 @@
 version: '3.9'
 
 services:
-  minio_service:
-    container_name: minio_service
+  orders_service:
+    container_name: orders_service
     build:
-      context: ./minio_service
+      context: ./orders_service
     ports:
-      - "${MINIO_PORT}:8000"
+      - "${ORDERS_PORT}:8000"
     env_file:
       - .env
     #volumes:
     #  - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
     #  - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
-
-  auth_service:
-    container_name: auth_service
-    build:
-      context: ./auth_service
-    ports:
-      - "${AUTH_PORT}:8000"
-    env_file:
-      - .env
     depends_on:
-      users_postgres:
+      orders_postgres:
         condition: service_healthy
     networks:
       - monitoring
-
-  users_service:
-    container_name: users_service
-    build:
-      context: ./users_service
-    ports:
-      - "${USERS_PORT}:8000"
-    env_file:
-      - .env
-    depends_on:
-      users_postgres:
-        condition: service_healthy
-    networks:
-      - monitoring
-
-  users_postgres:
-    container_name: users_postgres
+  orders_postgres:
+    container_name: orders_postgres
     image: postgres:16.4-alpine3.20
     ports:
-      - "${USERS_POSTGRES_PORT}:${USERS_POSTGRES_PORT}"
+      - "${ORDERS_POSTGRES_PORT}:${ORDERS_POSTGRES_PORT}"
     volumes:
-      - ./mapped:/var/lib/postgresql/data
-    command: -p ${USERS_POSTGRES_PORT}
+      - ./mapped_orders:/var/lib/postgresql/data
+    command: -p ${ORDERS_POSTGRES_PORT}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -p ${USERS_POSTGRES_PORT} -d ${USERS_POSTGRES_DB} -U ${USERS_POSTGRES_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -p ${ORDERS_POSTGRES_PORT} -d ${ORDERS_POSTGRES_DB} -U ${ORDERS_POSTGRES_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5
     environment:
-      - POSTGRES_USER=${USERS_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${USERS_POSTGRES_PASSWORD}
-      - POSTGRES_DB=${USERS_POSTGRES_DB}
+      - POSTGRES_USER=${ORDERS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${ORDERS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${ORDERS_POSTGRES_DB}
     networks:
       - monitoring
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - monitoring
+#   minio_service:
+#     container_name: minio_service
+#     build:
+#       context: ./minio_service
+#     ports:
+#       - "${MINIO_PORT}:8000"
+#     env_file:
+#       - .env
+#     #volumes:
+#     #  - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
+#     #  - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
 
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - ./loki:/etc/loki
-      - loki_data:/loki
-      - loki_wal:/wal
-    user: "root"
-    networks:
-      - monitoring
+#   auth_service:
+#     container_name: auth_service
+#     build:
+#       context: ./auth_service
+#     ports:
+#       - "${AUTH_PORT}:8000"
+#     env_file:
+#       - .env
+#     depends_on:
+#       users_postgres:
+#         condition: service_healthy
+#     networks:
+#       - monitoring
 
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
-    volumes:
-      - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: -config.file=/etc/promtail/config.yaml
-    networks:
-      - monitoring
+#   users_service:
+#     container_name: users_service
+#     build:
+#       context: ./users_service
+#     ports:
+#       - "${USERS_PORT}:8000"
+#     env_file:
+#       - .env
+#     depends_on:
+#       users_postgres:
+#         condition: service_healthy
+#     networks:
+#       - monitoring
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - grafana_data:/var/lib/grafana
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    depends_on:
-      - prometheus
-      - loki
-    networks:
-      - monitoring
+#   users_postgres:
+#     container_name: users_postgres
+#     image: postgres:16.4-alpine3.20
+#     ports:
+#       - "${USERS_POSTGRES_PORT}:${USERS_POSTGRES_PORT}"
+#     volumes:
+#       - ./mapped:/var/lib/postgresql/data
+#     command: -p ${USERS_POSTGRES_PORT}
+#     healthcheck:
+#       test: [ "CMD-SHELL", "pg_isready -p ${USERS_POSTGRES_PORT} -d ${USERS_POSTGRES_DB} -U ${USERS_POSTGRES_USER}" ]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     environment:
+#       - POSTGRES_USER=${USERS_POSTGRES_USER}
+#       - POSTGRES_PASSWORD=${USERS_POSTGRES_PASSWORD}
+#       - POSTGRES_DB=${USERS_POSTGRES_DB}
+#     networks:
+#       - monitoring
+
+#   prometheus:
+#     image: prom/prometheus:latest
+#     container_name: prometheus
+#     ports:
+#       - "9090:9090"
+#     volumes:
+#       - ./prometheus:/etc/prometheus
+#       - prometheus_data:/prometheus
+#     command:
+#       - '--config.file=/etc/prometheus/prometheus.yml'
+#       - '--storage.tsdb.path=/prometheus'
+#       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+#       - '--web.console.templates=/usr/share/prometheus/consoles'
+#     networks:
+#       - monitoring
+
+#   loki:
+#     image: grafana/loki:latest
+#     container_name: loki
+#     ports:
+#       - "3100:3100"
+#     command: -config.file=/etc/loki/local-config.yaml
+#     volumes:
+#       - ./loki:/etc/loki
+#       - loki_data:/loki
+#       - loki_wal:/wal
+#     user: "root"
+#     networks:
+#       - monitoring
+
+#   promtail:
+#     image: grafana/promtail:latest
+#     container_name: promtail
+#     volumes:
+#       - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
+#       - /var/run/docker.sock:/var/run/docker.sock
+#     command: -config.file=/etc/promtail/config.yaml
+#     networks:
+#       - monitoring
+
+#   grafana:
+#     image: grafana/grafana:latest
+#     container_name: grafana
+#     ports:
+#       - "3000:3000"
+#     volumes:
+#       - ./grafana/provisioning:/etc/grafana/provisioning
+#       - grafana_data:/var/lib/grafana
+#     environment:
+#       - GF_SECURITY_ADMIN_USER=admin
+#       - GF_SECURITY_ADMIN_PASSWORD=admin
+#       - GF_USERS_ALLOW_SIGN_UP=false
+#     depends_on:
+#       - prometheus
+#       - loki
+#     networks:
+#       - monitoring
 
 networks:
   monitoring:
     driver: bridge
 
-volumes:
-  prometheus_data:
-  loki_data:
-  loki_wal:
-  grafana_data:
+# volumes:
+#   prometheus_data:
+#   loki_data:
+#   loki_wal:
+#   grafana_data:
     
