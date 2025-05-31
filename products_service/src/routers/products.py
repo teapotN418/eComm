@@ -16,19 +16,19 @@ async def get_products(offset: int = 0, limit: int = 100):
     return products
 
 
+@router.get('/search', tags=['unauthorized'], response_model=list[ProductOut])
+async def get_products(string: str):
+    es_query = {}
+
+    result = await es_client.search(index=config.ES_INDEX, body=es_query)
+
+
 @router.get('/{id}', tags=['unauthorized'], response_model=ProductOut)
 async def get_product(id: int):
     product = await products_repo.get_product_by_id(id)
     if product == None:
         raise HTTPException(404, 'Product not found')
     return product
-
-
-@router.get('/search', tags=['unauthorized'], response_model=list[ProductOut])
-async def get_products(string: str):
-    es_query = {}
-
-    result = await es_client.search(index=config.ES_INDEX, body=es_query)
 
 
 @router.post(
