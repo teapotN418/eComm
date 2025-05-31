@@ -6,6 +6,7 @@ from typing import BinaryIO
 from src.app.core.config import settings
 
 class MinioServerAsync():
+    __minio_client: Minio
     __bucket_name: str
 
     def __init__(self):
@@ -21,25 +22,24 @@ class MinioServerAsync():
         found = await self.__minio_client.bucket_exists(self.__bucket_name)
         if not found:
             await self.__minio_client.make_bucket(self.__bucket_name)
+    
+    async def close(self):
+        await self.__minio_client.close_session()
 
     async def upload_file(self, file: BinaryIO, length: int):
         try:
-            file_id = str(uuid.uuid4()) + '.jpg'
+            file_id = str(uuid.uuid4())
             await self.__minio_client.put_object(self.__bucket_name, file_id, file, length)
         except Exception as e:
             raise e
         return file_id
-
-    async def upload_by_link(self, source_path: str) -> str:
+    
+    async def check_exist(self, object_id: str) -> None:
         try:
-            file_id = str(uuid.uuid4()) + '.jpg'
-            await self.__minio_client.fput_object(
-                self.__bucket_name, file_id, source_path
-            )
+            await self.__minio_client.stat_object(self.__bucket_name, object_id)
         except Exception as e:
             raise e
-        return file_id
-    
+
     async def get_object_url(self, object_id: str) -> str:
         try:
             link = await self.__minio_client.presigned_get_object(
