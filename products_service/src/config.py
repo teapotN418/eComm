@@ -12,7 +12,7 @@ class Config:
 
     GATEWAY_URL = os.getenv('GATEWAY_URL', 'localhost')
 
-    ES_HOSTS = [os.getenv('ES_HOST', 'localhost')]
+    ES_HOSTS = [os.getenv('ES_HOSTS', 'http://localhost:9200')]
     ES_INDEX = os.getenv('ES_INDEX', 'products')
 
 
