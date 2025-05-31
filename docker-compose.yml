@@ -3,7 +3,7 @@ version: '3.9'
 services:
   # Minio
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    image: minio/minio:latest
     ports:
       - '${MINIO_CONSOLE}:9001'
     volumes:
