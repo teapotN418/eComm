@@ -4,6 +4,8 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from fastapi import Request, Response
 import time
 
+SERVICE_NAME = "minio_service"
+
 # Настройка логирования
 logger = logging.getLogger("minio_service")
 logger.setLevel(logging.INFO)
@@ -20,13 +22,13 @@ logger.handlers = [console_handler]
 REQUEST_COUNT = Counter(
     'http_requests_total',
     'Total HTTP requests',
-    ['method', 'endpoint', 'status']
+    ['service', 'method', 'endpoint', 'status']
 )
 
 REQUEST_LATENCY = Histogram(
     'http_request_duration_seconds',
     'HTTP request latency',
-    ['method', 'endpoint']
+    ['service', 'method', 'endpoint']
 )
 
 def log_request(request: Request, response_time: float, status_code: int):
@@ -42,12 +44,14 @@ def log_request(request: Request, response_time: float, status_code: int):
     
     # Обновляем метрики
     REQUEST_COUNT.labels(
+        service=SERVICE_NAME,
         method=request.method,
         endpoint=request.url.path,
         status=status_code
     ).inc()
     
     REQUEST_LATENCY.labels(
+        service=SERVICE_NAME,
         method=request.method,
         endpoint=request.url.path
     ).observe(response_time)

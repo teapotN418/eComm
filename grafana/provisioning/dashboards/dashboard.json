@@ -9,218 +9,318 @@
     "liveNow": false,
     "panels": [
         {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 10,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                            "legend": false,
-                            "tooltip": false,
-                            "viz": false
-                        },
-                        "lineInterpolation": "linear",
-                        "lineWidth": 1,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "s"
-                },
-                "overrides": []
-            },
+            "type": "row",
+            "title": "Auth Service",
             "gridPos": {
-                "h": 8,
-                "w": 12,
+                "h": 1,
+                "w": 24,
                 "x": 0,
                 "y": 0
             },
-            "id": 1,
-            "options": {
-                "legend": {
-                    "calcs": [],
-                    "displayMode": "list",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "single",
-                    "sort": "none"
-                }
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "prometheus"
-                    },
-                    "expr": "rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])",
-                    "refId": "A"
-                }
-            ],
-            "title": "Request Latency",
-            "type": "timeseries"
+            "id": 100
         },
         {
+            "type": "timeseries",
+            "title": "Auth Service - Request Latency",
+            "id": 101,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 0,
+                "y": 1
+            },
             "datasource": {
                 "type": "prometheus",
                 "uid": "prometheus"
             },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 10,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                            "legend": false,
-                            "tooltip": false,
-                            "viz": false
-                        },
-                        "lineInterpolation": "linear",
-                        "lineWidth": 1,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 0
-            },
-            "id": 2,
-            "options": {
-                "legend": {
-                    "calcs": [],
-                    "displayMode": "list",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "single",
-                    "sort": "none"
+            "targets": [
+                {
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"auth_service\"}[5m]) / rate(http_request_duration_seconds_count{service=\"auth_service\"}[5m])",
+                    "refId": "A"
                 }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Auth Service - Request Rate",
+            "id": 102,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 8,
+                "y": 1
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
             },
             "targets": [
                 {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "prometheus"
-                    },
-                    "expr": "rate(http_requests_total[5m])",
+                    "expr": "rate(http_requests_total{service=\"auth_service\"}[5m])",
                     "refId": "A"
                 }
-            ],
-            "title": "Request Rate",
-            "type": "timeseries"
+            ]
         },
         {
-            "datasource": {
-                "type": "loki",
-                "uid": "loki"
+            "type": "timeseries",
+            "title": "Auth Service - Error Rate (4xx/5xx)",
+            "id": 103,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 16,
+                "y": 1
             },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"auth_service\",status=~\"4..|5..\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Auth Service - Total Requests",
+            "id": 104,
+            "gridPos": {
+                "h": 3,
+                "w": 6,
+                "x": 0,
+                "y": 7
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{service=\"auth_service\"})",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "row",
+            "title": "Users Service",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 10
+            },
+            "id": 200
+        },
+        {
+            "type": "timeseries",
+            "title": "Users Service - Request Latency",
+            "id": 201,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 0,
+                "y": 11
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"users_service\"}[5m]) / rate(http_request_duration_seconds_count{service=\"users_service\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Users Service - Request Rate",
+            "id": 202,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 8,
+                "y": 11
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"users_service\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Users Service - Error Rate (4xx/5xx)",
+            "id": 203,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 16,
+                "y": 11
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"users_service\",status=~\"4..|5..\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Users Service - Total Requests",
+            "id": 204,
+            "gridPos": {
+                "h": 3,
+                "w": 6,
+                "x": 0,
+                "y": 17
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{service=\"users_service\"})",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "row",
+            "title": "MinIO Service",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 20
+            },
+            "id": 300
+        },
+        {
+            "type": "timeseries",
+            "title": "MinIO Service - Request Latency",
+            "id": 301,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 0,
+                "y": 21
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"minio_service\"}[5m]) / rate(http_request_duration_seconds_count{service=\"minio_service\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "MinIO Service - Request Rate",
+            "id": 302,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 8,
+                "y": 21
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"minio_service\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "MinIO Service - Error Rate (4xx/5xx)",
+            "id": 303,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 16,
+                "y": 21
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"minio_service\",status=~\"4..|5..\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "MinIO Service - Total Requests",
+            "id": 304,
+            "gridPos": {
+                "h": 3,
+                "w": 6,
+                "x": 0,
+                "y": 27
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{service=\"minio_service\"})",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "logs",
+            "title": "Service Logs",
+            "id": 400,
             "gridPos": {
                 "h": 8,
                 "w": 24,
                 "x": 0,
-                "y": 8
+                "y": 30
             },
-            "id": 3,
-            "options": {
-                "dedupStrategy": "none",
-                "enableLogDetails": true,
-                "prettifyLogMessage": false,
-                "showCommonLabels": false,
-                "showLabels": false,
-                "showTime": true,
-                "sortOrder": "Descending",
-                "wrapLogMessage": false
+            "datasource": {
+                "type": "loki",
+                "uid": "loki"
             },
             "targets": [
                 {
-                    "datasource": {
-                        "type": "loki",
-                        "uid": "loki"
-                    },
                     "expr": "{container=\"auth_service\"} | json",
                     "refId": "A"
                 },
                 {
-                    "datasource": {
-                        "type": "loki",
-                        "uid": "loki"
-                    },
                     "expr": "{container=\"users_service\"} | json",
                     "refId": "B"
+                },
+                {
+                    "expr": "{container=\"minio_service\"} | json",
+                    "refId": "C"
                 }
-            ],
-            "title": "Service Logs",
-            "type": "logs"
+            ]
         }
     ],
     "refresh": "5s",
@@ -238,6 +338,6 @@
     "timezone": "",
     "title": "Services Dashboard",
     "uid": "services",
-    "version": 1,
+    "version": 2,
     "weekStart": ""
 }
