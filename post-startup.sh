@@ -1,1 +1,1 @@
-docker exec -it fastapi_users alembic upgrade head
+docker exec -it users_service alembic upgrade head
