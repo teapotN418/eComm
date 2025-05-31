@@ -170,6 +170,7 @@ services:
       CONNECT_PLUGIN_PATH: "/kafka/connect,/kafka/connect/debezium-connector-postgres,/kafka/connect/plugins"
     volumes:
       - ./connector-plugins:/kafka/connect/plugins
+      - ./connector-configs:/tmp/configs
     networks:
       - monitoring
     depends_on:
@@ -178,6 +179,7 @@ services:
 
   elasticsearch:
     image: elasticsearch:7.17.10
+    container_name: elasticsearch
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
