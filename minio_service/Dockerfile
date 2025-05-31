@@ -7,6 +7,7 @@ WORKDIR /app
 # set env variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV SERVICE_NAME=minio_service
 
 # install dependencies
 COPY ./requirements.txt ./requirements.txt
@@ -17,12 +18,8 @@ RUN apt-get update && \
 
 RUN pip install -r requirements.txt
 
-# create log directory
-RUN mkdir -p /var/log/minio_service
-
 # copy project
 COPY . ./
 
 # Starting the app
-ENTRYPOINT ["sh", "-c", "uvicorn src.app.main:app --port 8000 --host 0.0.0.0 2>&1 | tee -a /var/log/minio_service/app.log"]
-    #"--ssl-certfile", "fullchain.pem", "--ssl-keyfile", "privkey.pem"]
+ENTRYPOINT ["uvicorn", "src.main:app", "--port", "8000", "--host", "0.0.0.0"]

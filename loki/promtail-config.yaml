@@ -24,6 +24,20 @@ scrape_configs:
         labels:
           job: auth_service
           __path__: /var/log/auth_service/*.log
+          container: auth_service
+    pipeline_stages:
+      - json:
+          expressions:
+            time: time
+            level: level
+            service: service
+            message: message
+      - timestamp:
+          source: time
+          format: "2006-01-02 15:04:05.000000"
+      - labels:
+          level:
+          service:
 
   - job_name: users_service
     static_configs:
@@ -32,6 +46,20 @@ scrape_configs:
         labels:
           job: users_service
           __path__: /var/log/users_service/*.log
+          container: users_service
+    pipeline_stages:
+      - json:
+          expressions:
+            time: time
+            level: level
+            service: service
+            message: message
+      - timestamp:
+          source: time
+          format: "2006-01-02 15:04:05.000000"
+      - labels:
+          level:
+          service:
 
   - job_name: minio_service
     static_configs:
@@ -39,4 +67,18 @@ scrape_configs:
           - localhost
         labels:
           job: minio_service
-          __path__: /var/log/minio_service/*.log 
+          __path__: /var/log/minio_service/*.log
+          container: minio_service
+    pipeline_stages:
+      - json:
+          expressions:
+            time: time
+            level: level
+            service: service
+            message: message
+      - timestamp:
+          source: time
+          format: "2006-01-02 15:04:05.000000"
+      - labels:
+          level:
+          service: 

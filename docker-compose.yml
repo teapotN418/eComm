@@ -42,6 +42,8 @@ services:
       - "${AUTH_PORT}:8000"
     env_file:
       - .env
+    volumes:
+      - auth_logs:/var/log/auth_service
     depends_on:
       users_postgres:
         condition: service_healthy
@@ -56,6 +58,8 @@ services:
       - "${USERS_PORT}:8000"
     env_file:
       - .env
+    volumes:
+      - users_logs:/var/log/users_service
     depends_on:
       users_postgres:
         condition: service_healthy
@@ -119,6 +123,8 @@ services:
       - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock
       - minio_logs:/var/log/minio_service
+      - auth_logs:/var/log/auth_service
+      - users_logs:/var/log/users_service
     command: -config.file=/etc/promtail/config.yaml
     networks:
       - monitoring
@@ -152,4 +158,6 @@ volumes:
   grafana_data:
   minio_logs:
   minio_data:
+  auth_logs:
+  users_logs:
     
