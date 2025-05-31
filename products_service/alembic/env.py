@@ -30,8 +30,6 @@ target_metadata = Base.metadata
 
 config.set_main_option(
     'sqlalchemy.url', app_config.POSTGRES_URL.replace('asyncpg', 'psycopg2'))
-print("Alembic is using SQLALCHEMY URL:",
-      config.get_main_option('sqlalchemy.url'))
 
 
 def run_migrations_offline() -> None:
