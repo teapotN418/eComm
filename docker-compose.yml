@@ -5,7 +5,7 @@ services:
   minio:
     image: quay.io/minio/minio:latest
     ports:
-      - '${MINIO_PORT}:9001'
+      - '${MINIO_CONSOLE}:9001'
     volumes:
       - minio_data:/data
     environment:
