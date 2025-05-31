@@ -7,6 +7,7 @@ PROJECT_DIR = Path(__file__).parent.parent.parent.parent
 with open(f"{PROJECT_DIR}/pyproject.toml", "rb") as f:
     PYPROJECT_CONTENT = tomllib.load(f)["project"]
 
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = PYPROJECT_CONTENT["name"]
     VERSION: str = PYPROJECT_CONTENT["version"]
@@ -17,8 +18,7 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: str
     MINIO_BUCKET: str
 
-    BACKEND_PORT: str = Field(alias="MINIO_PORT")
-    
     model_config = SettingsConfigDict(env_file=".env")
+
 
 settings = Settings()
