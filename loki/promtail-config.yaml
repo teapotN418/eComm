@@ -31,4 +31,12 @@ scrape_configs:
           - localhost
         labels:
           job: users_service
-          __path__: /var/log/users_service/*.log 
+          __path__: /var/log/users_service/*.log
+
+  - job_name: minio_service
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: minio_service
+          __path__: /var/log/minio_service/*.log 

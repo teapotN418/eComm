@@ -17,9 +17,12 @@ RUN apt-get update && \
 
 RUN pip install -r requirements.txt
 
+# create log directory
+RUN mkdir -p /var/log/minio_service
+
 # copy project
 COPY . ./
 
 # Starting the app
-ENTRYPOINT ["uvicorn", "src.app.main:app", "--port", "8000", "--host", "0.0.0.0"]
+ENTRYPOINT ["sh", "-c", "uvicorn src.app.main:app --port 8000 --host 0.0.0.0 2>&1 | tee -a /var/log/minio_service/app.log"]
     #"--ssl-certfile", "fullchain.pem", "--ssl-keyfile", "privkey.pem"]

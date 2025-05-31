@@ -1,14 +1,35 @@
 version: '3.9'
 
 services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - monitoring
+
   minio_service:
     container_name: minio_service
     build:
       context: ./minio_service
     ports:
-      - "${MINIO_PORT}:8000"
+      - "8003:8000"
     env_file:
       - .env
+    volumes:
+      - minio_logs:/var/log/minio_service
+    networks:
+      - monitoring
+    depends_on:
+      - minio
     #volumes:
     #  - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
     #  - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
@@ -97,6 +118,7 @@ services:
     volumes:
       - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock
+      - minio_logs:/var/log/minio_service
     command: -config.file=/etc/promtail/config.yaml
     networks:
       - monitoring
@@ -128,4 +150,6 @@ volumes:
   loki_data:
   loki_wal:
   grafana_data:
+  minio_logs:
+  minio_data:
     
