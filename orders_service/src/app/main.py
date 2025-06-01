@@ -15,9 +15,9 @@ origins = [
 ]
 
 app = FastAPI(
-    # title=settings.PROJECT_NAME,
-    # description=settings.DESCRIPTION,
-    # version=settings.VERSION,
+    title=settings.PROJECT_NAME,
+    description=settings.DESCRIPTION,
+    version=settings.VERSION,
     openapi_tags=tags_metadata,
     docs_url="/",
 )

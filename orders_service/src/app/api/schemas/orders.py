@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
+from datetime import datetime
 
 class Status(str, Enum):
     created = "created"
@@ -9,7 +10,22 @@ class Status(str, Enum):
 
 class OrderBase(BaseModel):
     user_id: int
-    order_dict: dict
 
 class OrderStatus(OrderBase):
     status: Status
+
+class ItemOut(BaseModel):
+    product_id: int
+    quantity: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class OrderOut(BaseModel):
+    id: int
+    user_id: int
+    status: Status
+    created_at: datetime
+    updated_at: datetime
+    items: list[ItemOut]
+
+    model_config = ConfigDict(from_attributes=True)

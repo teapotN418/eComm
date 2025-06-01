@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import JSON, String, DateTime, Enum as SQLEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import JSON, String, DateTime, ForeignKey
 from typing import Annotated
 from datetime import datetime, timezone
 
@@ -12,7 +12,6 @@ class OrdersORM(Base):
     
     id: Mapped[intpk]
     user_id: Mapped[int] = mapped_column(nullable=False)
-    order_dict: Mapped[dict] = mapped_column(JSON(none_as_null=True), nullable=False)
     status: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -25,4 +24,19 @@ class OrdersORM(Base):
         onupdate=lambda:datetime.now(timezone.utc),
         nullable=False,
     )
+    items: Mapped[list["ItemsORM"]] = relationship(
+        back_populates="order",
+        cascade="all, delete-orphan"
+    )
+
+class ItemsORM(Base):
+    __tablename__ = "items"
     
+    id: Mapped[intpk]
+    order_id: Mapped[int] = mapped_column(
+        ForeignKey("orders.id", ondelete="CASCADE")
+    )
+    product_id: Mapped[int] = mapped_column(nullable=False)
+    quantity: Mapped[int] = mapped_column(nullable=False, default=1)
+
+    order: Mapped["OrdersORM"] = relationship(back_populates="items")

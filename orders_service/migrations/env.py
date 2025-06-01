@@ -7,7 +7,7 @@ from alembic import context
 
 from src.app.core.config import settings
 from src.app.db.setup import Base
-from src.app.db.models import OrdersORM
+from src.app.db.models import OrdersORM, ItemsORM
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

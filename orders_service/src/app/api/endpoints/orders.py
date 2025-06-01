@@ -6,16 +6,17 @@ from fastapi import Request, Response, HTTPException
 from fastapi import Depends
 
 import src.app.db.crud as crud
-from src.app.api.schemas.orders import OrderBase, OrderStatus, Status
-from src.app.core.config import settings
+from src.app.api.schemas.orders import OrderStatus, Status, OrderOut
 from src.app.api.deps import get_db, AsyncSession
-from .cart import get_cart_from_cookies, Cart
+from .cart import get_cart_from_cookies
 
 router = APIRouter()
 
+########################### authenticated
+
 @router.post("/{user_id}", 
     tags=["authenticated"],
-    response_model=OrderStatus,
+    response_model=OrderOut,
 )
 async def create_order(
     request: Request,
@@ -23,69 +24,111 @@ async def create_order(
     db: AsyncSession = Depends(get_db),
 ):
     cart = await get_cart_from_cookies(request)
-    if len(cart.pr)==0:
+    try:
+        if len(cart.pr)==0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
+        )
+        order_data = [(item["id"], item["q"]) for item in cart.model_dump()["pr"]]
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}"
         )
     order_with_status = OrderStatus(
         user_id = user_id,
-        order_dict=cart.model_dump(),
         status=Status.created,
     )
-    order = await crud.create_order(order_with_status, db)
+    order = await crud.create_order(order_with_status, order_data, db)
     return order
-    
 
-# @router.get("/profile/{user_id}", 
+@router.get("/me/{user_id}", 
+    tags=["authenticated"],
+    response_model=list[OrderOut],
+)
+async def get_orders_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    orders = await crud.get_orders_by_user(user_id, db)
+    return orders
+
+# ########################### admin
+
+@router.get("",
+    response_model=list[OrderOut],
+    tags=["admin"],
+)
+async def get_all_orders(
+    skip: int = 0, 
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+):
+    orders = await crud.get_orders(skip=skip, limit=limit, session=db)
+    return orders
+
+@router.get("/{order_id}", 
+    tags=["authenticated"],
+    response_model=OrderOut,
+)
+async def get_order(
+    order_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    order = await crud.get_order_by_id(order_id, db)
+    if order is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No order found"
+        )
+    return order
+
+# @router.put("/{order_id}", 
 #     tags=["authenticated"],
-#     response_model=UserShow,
 # )
-# async def read_profile(
+# async def create_order(
+#     request: Request,
 #     user_id: int,
 #     db: AsyncSession = Depends(get_db),
 # ):
-#     user = await crud.get_user(user_id=user_id, session=db)
-#     if user is None:
+#     cart = await get_cart_from_cookies(request)
+#     if len(cart.pr)==0:
 #         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+#             status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
 #         )
-#     return user
+#     order_with_status = OrderStatus(
+#         user_id = user_id,
+#         status=Status.created,
+#     )
+#     try:
+#         order_data = [(item["id"], item["q"]) for item in cart.model_dump()["pr"]]
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}"
+#         )
+#     order = await crud.create_order(order_with_status, order_data, db)
+#     return order
 
-
-
-# @router.put("/profile/{user_id}", 
+# @router.delete("/{order_id}", 
 #     tags=["authenticated"],
 # )
-# async def update_profile(
+# async def create_order(
+#     request: Request,
 #     user_id: int,
-#     password_form: Password,
 #     db: AsyncSession = Depends(get_db),
 # ):
-#     user = await crud.get_user(user_id=user_id, session=db)
-#     if user is None:
+#     cart = await get_cart_from_cookies(request)
+#     if len(cart.pr)==0:
 #         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+#             status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
 #         )
-#     await crud.update_user(user.id, password_form.password, session=db)
-#     return {"detail": "Password changed"}
-
-
-
-# @router.delete("/profile/{user_id}", 
-#     tags=["authenticated"],
-# )
-# async def delete_profile(
-#     user_id: int,
-#     # response: Response,
-#     db: AsyncSession = Depends(get_db),
-# ):
-#     user = await crud.get_user(user_id=user_id, session=db)
-#     if user is None:
+#     order_with_status = OrderStatus(
+#         user_id = user_id,
+#         status=Status.created,
+#     )
+#     try:
+#         order_data = [(item["id"], item["q"]) for item in cart.model_dump()["pr"]]
+#     except Exception as e:
 #         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+#             status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}"
 #         )
-#     await crud.delete_user(user, session=db)
-#     # response.delete_cookie(security.security_config.JWT_ACCESS_COOKIE_NAME, security.security_config.JWT_ACCESS_COOKIE_PATH)
-#     # response.delete_cookie(security.security_config.JWT_REFRESH_COOKIE_NAME, security.security_config.JWT_REFRESH_COOKIE_PATH)
-#     # ЖЕЛАТЕЛЬНО КОНЕЧНО ТОКЕНЫ ЕЩЁ ДОБАВЛЯТЬ В REVOKED
-#     return {"detail": "User deleted"}
+#     order = await crud.create_order(order_with_status, order_data, db)
+#     return order
