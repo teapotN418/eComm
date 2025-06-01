@@ -24,6 +24,8 @@ services:
       context: ./minio_service
     ports:
       - "${MINIO_SERVICE_PORT}:8000"
+    volumes:
+      - minio_logs:/var/log/minio_service
     env_file:
       - .env
     depends_on:
@@ -221,6 +223,7 @@ services:
     volumes:
       - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock
+      - minio_logs:/var/log/minio_service
     command: -config.file=/etc/promtail/config.yaml
     networks:
       - monitoring
@@ -252,6 +255,7 @@ volumes:
   loki_data:
   loki_wal:
   grafana_data:
+  minio_logs:
   minio_data:
   users_data:
   products_data:

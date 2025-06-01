@@ -17,6 +17,9 @@ RUN apt-get update && \
 
 RUN pip install -r requirements.txt
 
+# create log directory
+RUN mkdir -p /var/log/minio_service
+
 # copy project
 COPY . ./
 
