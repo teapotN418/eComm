@@ -22,7 +22,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -135,3 +134,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+connector-configs
+connector-plugins
+minio_certs

@@ -4,10 +4,10 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from fastapi import Request, Response
 import time
 
-SERVICE_NAME = "users_service"
+SERVICE_NAME = "minio_service"
 
 # Настройка логирования
-logger = logging.getLogger("users_service")
+logger = logging.getLogger("minio_service")
 logger.setLevel(logging.INFO)
 
 # Создаем JSON форматтер
@@ -56,8 +56,12 @@ def log_request(request: Request, response_time: float, status_code: int):
         endpoint=request.url.path
     ).observe(response_time)
 
-def get_metrics():
-    return Response(
-        generate_latest(),
-        media_type=CONTENT_TYPE_LATEST
-    ) 
+def log_file_operation(operation: str, file_info: dict):
+    """Логирование операций с файлами"""
+    if 'filename' in file_info:
+        file_info['file_name'] = file_info.pop('filename')
+    log_data = {
+        "operation": operation,
+        **file_info
+    }
+    logger.info("File Operation", extra=log_data) 

@@ -1,6 +1,6 @@
 from src.config import config as app_config
 from src.repository.db import Base
-from src.models.orm_models import Product, Providers, Categories
+from src.models.orm_models import Product, Provider, Category
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
