@@ -119,6 +119,37 @@ services:
     networks:
       - monitoring
 
+  # Reviews
+  reviews_postgres:
+    image: postgres:16.4-alpine3.20
+    container_name: reviews_postgres
+    environment:
+      - POSTGRES_USER=${REVIEWS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${REVIEWS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${REVIEWS_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${REVIEWS_POSTGRES_DB} -U ${REVIEWS_POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - reviews_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+
+  reviews_service:
+    container_name: reviews_service
+    build:
+      context: ./reviews_service
+    ports:
+      - "${REVIEWS_PORT}:8000"
+    env_file:
+      - .env
+    depends_on:
+      reviews_postgres:
+        condition: service_healthy
+    networks:
+      - monitoring
   # Kafka
   zookeeper:
     image: zookeeper:3.8
@@ -157,6 +188,8 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
       CONNECT_REST_PORT: 8083
 
+      CONNECT_HEAP_OPTS: "-Xms512m -Xmx512m"
+
       BOOTSTRAP_SERVERS: "kafka:9092" # Kafka
       GROUP_ID: 1
       CONFIG_STORAGE_TOPIC: connect_configs
@@ -190,12 +223,11 @@ services:
       - esdata:/usr/share/elasticsearch/data
     networks:
       - monitoring
+
   # Logging
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-    - "9090:9090"
     volumes:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
@@ -265,3 +297,4 @@ volumes:
   zookeeper-datalog:
   kafka-data:
   esdata:
+  reviews_data:
