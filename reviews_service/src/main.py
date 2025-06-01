@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from prometheus_client import make_asgi_app
 from src.config import config
 from src.router import router
+from src.middleware import LoggingMiddleware
 
 openapi_tags = [
     {'name': 'unauthorized', 'description': 'Does not require authorization'},
@@ -13,6 +15,9 @@ app = FastAPI(
     docs_url='/docs'
 )
 
+# Добавляем middleware для логирования
+app.add_middleware(LoggingMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[config.GATEWAY_URL],
@@ -20,5 +25,9 @@ app.add_middleware(
     allow_methods=['GET', 'POST', 'PUT', 'DELETE'],
     allow_headers=['*']
 )
+
+# Добавляем эндпоинт для метрик Prometheus
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
 
 app.include_router(router, prefix='/api/reviews')

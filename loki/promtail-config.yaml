@@ -39,7 +39,7 @@ scrape_configs:
           - localhost
         labels:
           job: minio_service
-          __path__: /var/log/minio_service/*.log
+          __path__: /var/log/minio_service/*.log 
 
   - job_name: orders_service
     static_configs:

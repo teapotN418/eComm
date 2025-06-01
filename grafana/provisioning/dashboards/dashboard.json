@@ -35,7 +35,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_request_duration_seconds_sum{service=\"auth_service\",endpoint!=\"/metrics\"}[5m]) / rate(http_request_duration_seconds_count{service=\"auth_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"auth_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m]) / rate(http_request_duration_seconds_count{service=\"auth_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -56,7 +56,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"auth_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"auth_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -77,7 +77,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"auth_service\",status=~\"4..|5..\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"auth_service\",status=~\"4..|5..\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -98,7 +98,7 @@
             },
             "targets": [
                 {
-                    "expr": "sum(http_requests_total{service=\"auth_service\",endpoint!=\"/metrics\"})",
+                    "expr": "sum(http_requests_total{service=\"auth_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"})",
                     "refId": "A"
                 }
             ]
@@ -130,7 +130,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_request_duration_seconds_sum{service=\"users_service\",endpoint!=\"/metrics\"}[5m]) / rate(http_request_duration_seconds_count{service=\"users_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"users_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m]) / rate(http_request_duration_seconds_count{service=\"users_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -151,7 +151,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"users_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"users_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -172,7 +172,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"users_service\",status=~\"4..|5..\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"users_service\",status=~\"4..|5..\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -193,7 +193,7 @@
             },
             "targets": [
                 {
-                    "expr": "sum(http_requests_total{service=\"users_service\",endpoint!=\"/metrics\"})",
+                    "expr": "sum(http_requests_total{service=\"users_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"})",
                     "refId": "A"
                 }
             ]
@@ -225,7 +225,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_request_duration_seconds_sum{service=\"minio_service\",endpoint!=\"/metrics\"}[5m]) / rate(http_request_duration_seconds_count{service=\"minio_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"minio_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m]) / rate(http_request_duration_seconds_count{service=\"minio_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -246,7 +246,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"minio_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"minio_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -267,7 +267,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"minio_service\",status=~\"4..|5..\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"minio_service\",status=~\"4..|5..\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -288,7 +288,7 @@
             },
             "targets": [
                 {
-                    "expr": "sum(http_requests_total{service=\"minio_service\",endpoint!=\"/metrics\"})",
+                    "expr": "sum(http_requests_total{service=\"minio_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"})",
                     "refId": "A"
                 }
             ]
@@ -320,7 +320,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_request_duration_seconds_sum{service=\"products_service\",endpoint!=\"/metrics\"}[5m]) / rate(http_request_duration_seconds_count{service=\"products_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"products_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m]) / rate(http_request_duration_seconds_count{service=\"products_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -341,7 +341,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"products_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"products_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -362,7 +362,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"products_service\",status=~\"4..|5..\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"products_service\",status=~\"4..|5..\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -383,7 +383,7 @@
             },
             "targets": [
                 {
-                    "expr": "sum(http_requests_total{service=\"products_service\",endpoint!=\"/metrics\"})",
+                    "expr": "sum(http_requests_total{service=\"products_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"})",
                     "refId": "A"
                 }
             ]
@@ -415,7 +415,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_request_duration_seconds_sum{service=\"orders_service\",endpoint!=\"/metrics\"}[5m]) / rate(http_request_duration_seconds_count{service=\"orders_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"orders_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m]) / rate(http_request_duration_seconds_count{service=\"orders_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -436,7 +436,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"orders_service\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"orders_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -457,7 +457,7 @@
             },
             "targets": [
                 {
-                    "expr": "rate(http_requests_total{service=\"orders_service\",status=~\"4..|5..\",endpoint!=\"/metrics\"}[5m])",
+                    "expr": "rate(http_requests_total{service=\"orders_service\",status=~\"4..|5..\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
                     "refId": "A"
                 }
             ]
@@ -478,7 +478,102 @@
             },
             "targets": [
                 {
-                    "expr": "sum(http_requests_total{service=\"orders_service\",endpoint!=\"/metrics\"})",
+                    "expr": "sum(http_requests_total{service=\"orders_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"})",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "row",
+            "title": "Reviews Service",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 46
+            },
+            "id": 700
+        },
+        {
+            "type": "timeseries",
+            "title": "Reviews Service - Request Latency",
+            "id": 701,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 0,
+                "y": 47
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"reviews_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m]) / rate(http_request_duration_seconds_count{service=\"reviews_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Reviews Service - Request Rate",
+            "id": 702,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 8,
+                "y": 47
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"reviews_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Reviews Service - Error Rate (4xx/5xx)",
+            "id": 703,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 16,
+                "y": 47
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"reviews_service\",status=~\"4..|5..\",endpoint=~\".*\",endpoint!~\"/metrics.*\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Reviews Service - Total Requests",
+            "id": 704,
+            "gridPos": {
+                "h": 3,
+                "w": 6,
+                "x": 0,
+                "y": 53
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{service=\"reviews_service\",endpoint=~\".*\",endpoint!~\"/metrics.*\"})",
                     "refId": "A"
                 }
             ]
@@ -490,7 +585,7 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 48
+                "y": 56
             },
             "id": 600
         },
@@ -502,7 +597,7 @@
                 "h": 8,
                 "w": 24,
                 "x": 0,
-                "y": 49
+                "y": 57
             },
             "datasource": {
                 "type": "loki",
@@ -528,6 +623,10 @@
                 {
                     "expr": "{container=\"orders_service\"} | json",
                     "refId": "E"
+                },
+                {
+                    "expr": "{container=\"reviews_service\"} | json",
+                    "refId": "F"
                 }
             ]
         }
