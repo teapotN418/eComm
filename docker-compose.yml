@@ -332,5 +332,5 @@ volumes:
   kafka-data:
   esdata:
   orders_logs:
-  orders_data
+  orders_data:
   reviews_data:
