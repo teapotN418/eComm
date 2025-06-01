@@ -15,6 +15,8 @@ async def test_admin_data():
         "password": "12345"
     }
 
+# Для тестов требуется чтобы оба пользователя сверху были в БД
+
 @pytest.fixture()
 async def authed_client(client: AsyncClient, test_user_data: dict):
     response = await client.post(

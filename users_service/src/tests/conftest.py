@@ -5,7 +5,6 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncTransaction, AsyncConnection, AsyncSession, create_async_engine
 
 from src.app.core.config import settings
-from src.app.core.security import security_config
 from src.app.api.deps import get_db
 from src.app.main import app
 
@@ -18,8 +17,6 @@ pytestmark = pytest.mark.anyio
 engine = create_async_engine(db_url)
 
 # Required per https://anyio.readthedocs.io/en/stable/testing.html#using-async-fixtures-with-higher-scopes
-
-
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
