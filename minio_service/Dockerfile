@@ -24,5 +24,5 @@ RUN mkdir -p /var/log/minio_service
 COPY . ./
 
 # Starting the app
-ENTRYPOINT ["sh", "-c", "uvicorn src.app.main:app --port 8000 --host 0.0.0.0 2>&1 | tee -a /var/log/minio_service/app.log"]
+ENTRYPOINT ["uvicorn", "src.app.main:app", "--port", "8000", "--host", "0.0.0.0"]
     #"--ssl-certfile", "fullchain.pem", "--ssl-keyfile", "privkey.pem"]
