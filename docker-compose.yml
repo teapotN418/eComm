@@ -190,6 +190,23 @@ services:
       - esdata:/usr/share/elasticsearch/data
     networks:
       - monitoring
+
+  orders_service:
+    container_name: orders_service
+    build:
+      context: ./orders_service
+    ports:
+      - "${ORDERS_PORT}:8000"
+    env_file:
+      - .env
+    depends_on:
+      users_postgres:
+        condition: service_healthy
+    networks:
+      - monitoring
+    volumes:
+      - orders_logs:/var/log/orders_service
+
   # Logging
   prometheus:
     image: prom/prometheus:latest
@@ -265,3 +282,4 @@ volumes:
   zookeeper-datalog:
   kafka-data:
   esdata:
+  orders_logs:
