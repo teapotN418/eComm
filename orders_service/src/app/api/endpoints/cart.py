@@ -39,6 +39,7 @@ async def set_cart_to_cookies(response: Response, cart: Cart) -> None:
 
 @router.get("", 
     response_model=Cart,
+    tags=["no-auth"],
 )
 async def get_cart(
     request: Request,
@@ -49,6 +50,7 @@ async def get_cart(
 
 @router.post("/items", 
     response_model=Cart,
+    tags=["no-auth"],
 )
 async def add_item_to_cart(
     request: Request, 
@@ -74,6 +76,7 @@ async def add_item_to_cart(
 
 @router.put("/items/{product_id}", 
     response_model=Cart,
+    tags=["no-auth"],
 )
 async def update_cart_item(
     request: Request,
@@ -102,6 +105,7 @@ async def update_cart_item(
 
 @router.delete("/items/{product_id}", 
     response_model=Cart,
+    tags=["no-auth"],
 )
 async def remove_item_from_cart(
     request: Request,
@@ -127,6 +131,7 @@ async def remove_item_from_cart(
 
 @router.delete("", 
     response_model=Cart,
+    tags=["no-auth"],
 )
 async def clear_cart(
     request: Request, 

@@ -8,6 +8,8 @@ from src.app.core.config import settings
 
 tags_metadata = [
     {"name": "no-auth", "description": "Operations for everyone"},
+    {"name": "authenticated", "description": "Operations for all authenticated"},
+    {"name": "admin", "description": "Operations for admins only"},
 ]
 
 origins = [
