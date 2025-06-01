@@ -18,9 +18,51 @@ async def get_products(offset: int = 0, limit: int = 100):
 
 @router.get('/search', tags=['unauthorized'], response_model=list[ProductOut])
 async def get_products(string: str):
-    es_query = {}
+    es_query = {
+        "size": 20,
+        "query": {
+            "bool": {
+                "should": [
+                    {
+                        "match_phrase": {  # Точное совпадение названия продукта
+                            "name": {
+                                "query": string,
+                                "boost": 200  # Максимальный приоритет точному совпадению
+                            }
+                        }
+                    },
+                    {
+                        "multi_match": {  # Частичное совпадение в названии
+                            "query": string,
+                            "fields": ["name^5"],
+                            "boost": 20
+                        }
+                    },
+                    {
+                        "multi_match": {  # Поиск по описанию
+                            "query": string,
+                            "fields": ["description^1"],
+                            "boost": 5
+                        }
+                    }
+                ],
+                "minimum_should_match": 1
+            }
+        },
+        "sort": [
+            {
+                "_score": {  # Сортировка только по релевантности
+                    "order": "desc"
+                }
+            }
+        ]
+    }
 
     result = await es_client.search(index=config.ES_INDEX, body=es_query)
+    ids = [hit["_source"]["id"] for hit in result["hits"]["hits"]]
+
+    products = await products_repo.get_found_products(ids)
+    return products
 
 
 @router.get('/{id}', tags=['unauthorized'], response_model=ProductOut)

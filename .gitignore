@@ -138,3 +138,4 @@ dmypy.json
 
 connector-configs
 connector-plugins
+minio_certs

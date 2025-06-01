@@ -69,6 +69,16 @@ class ProductsRepo:
             result = await session.execute(statement)
             return result.scalars().first()
 
+    async def get_found_products(self, ids: list[int]):
+        async with async_session() as session:
+            statement = select(Product).options(
+                joinedload(Product.provider),
+                joinedload(Product.category)
+            ).where(Product.id.in_(ids))
+
+            result = await session.execute(statement)
+            return result.scalars().all()
+
     async def insert_product(self, product: Product):
         async with async_session() as session:
             session.add(product)
