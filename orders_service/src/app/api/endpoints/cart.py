@@ -6,7 +6,7 @@ from fastapi import Request, Response, HTTPException
 import json
 from datetime import datetime, timedelta, timezone
 
-from src.app.api.schemas import Item, Cart
+from src.app.api.schemas.cart import Item, Cart
 from src.app.core.config import settings
 
 router = APIRouter()
@@ -37,7 +37,7 @@ async def set_cart_to_cookies(response: Response, cart: Cart) -> None:
 
 
 
-@router.get("/cart", 
+@router.get("", 
     response_model=Cart,
 )
 async def get_cart(
@@ -47,7 +47,7 @@ async def get_cart(
 
 
 
-@router.post("/cart/items", 
+@router.post("/items", 
     response_model=Cart,
 )
 async def add_item_to_cart(
@@ -58,21 +58,21 @@ async def add_item_to_cart(
     cart = await get_cart_from_cookies(request)
     
     existing_item = next(
-        (i for i in cart.items if i.product_id == item.product_id),
+        (i for i in cart.pr if i.id == item.id),
         None
     )
     
     if existing_item:
-        existing_item.quantity += item.quantity
+        existing_item.q += item.q
     else:
-        cart.items.append(item)
+        cart.pr.append(item)
     
     await set_cart_to_cookies(response, cart)
     return cart
 
 
 
-@router.put("/cart/items/{product_id}", 
+@router.put("/items/{product_id}", 
     response_model=Cart,
 )
 async def update_cart_item(
@@ -87,20 +87,20 @@ async def update_cart_item(
     cart = await get_cart_from_cookies(request)
     
     item = next(
-        (i for i in cart.items if i.product_id == product_id),
+        (i for i in cart.pr if i.id == product_id),
         None
     )
     
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found in cart")
     
-    item.quantity = quantity
+    item.q = quantity
     await set_cart_to_cookies(response, cart)
     return cart
 
 
 
-@router.delete("/cart/items/{product_id}", 
+@router.delete("/items/{product_id}", 
     response_model=Cart,
 )
 async def remove_item_from_cart(
@@ -110,11 +110,11 @@ async def remove_item_from_cart(
 ):
     cart = await get_cart_from_cookies(request)
 
-    original_count = len(cart.items)
+    original_count = len(cart.pr)
     
-    cart.items = [item for item in cart.items if item.product_id != product_id]
+    cart.pr = [item for item in cart.pr if item.id != product_id]
 
-    if len(cart.items) == original_count:
+    if len(cart.pr) == original_count:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Item with product_id {product_id} not found in cart"
@@ -125,7 +125,7 @@ async def remove_item_from_cart(
 
 
 
-@router.delete("/cart", 
+@router.delete("", 
     response_model=Cart,
 )
 async def clear_cart(
@@ -133,6 +133,6 @@ async def clear_cart(
     response: Response,
 ):
     cart = await get_cart_from_cookies(request)
-    cart.items = []
+    cart.pr = []
     await set_cart_to_cookies(response, cart)
     return cart

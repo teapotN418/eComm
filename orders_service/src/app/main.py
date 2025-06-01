@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-import src.app.api.endpoints as endpoints
+import src.app.api.endpoints.cart as cart
+import src.app.api.endpoints.orders as orders
 from src.app.core.config import settings
 
 
@@ -14,9 +15,9 @@ origins = [
 ]
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description=settings.DESCRIPTION,
-    version=settings.VERSION,
+    # title=settings.PROJECT_NAME,
+    # description=settings.DESCRIPTION,
+    # version=settings.VERSION,
     openapi_tags=tags_metadata,
     docs_url="/",
 )
@@ -29,4 +30,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(endpoints.router)
+app.include_router(cart.router, prefix="/cart")
+app.include_router(orders.router, prefix="/orders")
