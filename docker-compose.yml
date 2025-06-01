@@ -118,6 +118,40 @@ services:
         condition: service_healthy
     networks:
       - monitoring
+  
+  # Orders
+  orders_postgres:
+    image: postgres:16.4-alpine3.20
+    container_name: orders_postgres
+    environment:
+      - POSTGRES_USER=${ORDERS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${ORDERS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${ORDERS_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${ORDERS_POSTGRES_DB} -U ${ORDERS_POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - orders_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+      
+  orders_service:
+    container_name: orders_service
+    build:
+      context: ./orders_service
+    ports:
+      - "${ORDERS_PORT}:8000"
+    env_file:
+      - .env
+    depends_on:
+      orders_postgres:
+        condition: service_healthy
+    networks:
+      - monitoring
+    volumes:
+      - orders_logs:/var/log/orders_service
 
   # Reviews
   reviews_postgres:
@@ -297,4 +331,6 @@ volumes:
   zookeeper-datalog:
   kafka-data:
   esdata:
+  orders_logs:
+  orders_data:
   reviews_data:

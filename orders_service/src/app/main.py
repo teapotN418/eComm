@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from starlette.middleware.cors import CORSMiddleware
 
 import src.app.api.endpoints.cart as cart
 import src.app.api.endpoints.orders as orders
 from src.app.core.config import settings
+from src.app.core.monitoring import log_request, get_metrics
+import time
 
 
 tags_metadata = [
@@ -34,3 +36,15 @@ app.add_middleware(
 
 app.include_router(cart.router, prefix="/cart")
 app.include_router(orders.router, prefix="/orders")
+
+@app.middleware("http")
+async def monitoring_middleware(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    response_time = time.time() - start_time
+    log_request(request, response_time, response.status_code)
+    return response
+
+@app.get("/metrics")
+async def metrics():
+    return get_metrics()

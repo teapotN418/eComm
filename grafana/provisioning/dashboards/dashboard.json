@@ -389,14 +389,120 @@
             ]
         },
         {
+            "type": "row",
+            "title": "Orders Service",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 38
+            },
+            "id": 500
+        },
+        {
+            "type": "timeseries",
+            "title": "Orders Service - Request Latency",
+            "id": 501,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 0,
+                "y": 39
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_request_duration_seconds_sum{service=\"orders_service\",endpoint!=\"/metrics\"}[5m]) / rate(http_request_duration_seconds_count{service=\"orders_service\",endpoint!=\"/metrics\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Orders Service - Request Rate",
+            "id": 502,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 8,
+                "y": 39
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"orders_service\",endpoint!=\"/metrics\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Orders Service - Error Rate (4xx/5xx)",
+            "id": 503,
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 16,
+                "y": 39
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{service=\"orders_service\",status=~\"4..|5..\",endpoint!=\"/metrics\"}[5m])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Orders Service - Total Requests",
+            "id": 504,
+            "gridPos": {
+                "h": 3,
+                "w": 6,
+                "x": 0,
+                "y": 45
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{service=\"orders_service\",endpoint!=\"/metrics\"})",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "row",
+            "title": "Service Logs",
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 48
+            },
+            "id": 600
+        },
+        {
             "type": "logs",
             "title": "Service Logs",
-            "id": 405,
+            "id": 601,
             "gridPos": {
                 "h": 8,
                 "w": 24,
                 "x": 0,
-                "y": 40
+                "y": 49
             },
             "datasource": {
                 "type": "loki",
@@ -418,6 +524,10 @@
                 {
                     "expr": "{container=\"products_service\"} | json",
                     "refId": "D"
+                },
+                {
+                    "expr": "{container=\"orders_service\"} | json",
+                    "refId": "E"
                 }
             ]
         }
