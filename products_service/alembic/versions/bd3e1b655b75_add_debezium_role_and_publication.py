@@ -27,9 +27,6 @@ def upgrade() -> None:
                "END IF; "
                "END $$;")
 
-    # Grant SELECT on all tables in schema 'public' to postgres
-    op.execute("GRANT SELECT ON ALL TABLES IN SCHEMA public TO postgres;")
-
     # Create publication if it doesn't already exist
     op.execute("DO $$ BEGIN "
                "IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'debezium_pub') THEN "
