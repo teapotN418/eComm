@@ -9,19 +9,15 @@ from fastapi import Header
 from src.app.services.async_minio import MinioServerAsync
 from src.app.api.deps import get_minio_service
 from src.app.core.monitoring import logger, log_file_operation
+from src.app.api.deps import require_admin
 
 router = APIRouter()
 
-def require_admin(
-    x_user_id: str = Header(...),
-    x_user_role: str = Header(...),
-):
-    if x_user_role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
-    return {"id": int(x_user_id), "role": x_user_role}
 
-@router.post('/upload/file',
-    tags=["auth"], dependencies=[Depends(require_admin)]
+@router.post(
+    '/upload/file',
+    tags=["admin"],
+    dependencies=[Depends(require_admin)]
 )
 async def upload_file(
     file: UploadFile,
@@ -32,7 +28,7 @@ async def upload_file(
         "content_type": file.content_type,
         "size": file.size
     })
-    
+
     allowed_types = ["image/", "video/"]
     allowed = False
     for type in allowed_types:
@@ -46,7 +42,7 @@ async def upload_file(
             "reason": "file_type_not_allowed"
         })
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"File type {file.content_type} not allowed."
         )
     try:
@@ -60,11 +56,14 @@ async def upload_file(
             "file_name": file.filename,
             "error": str(e)
         })
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
     return {"file_id": file_id}
 
-@router.get("/get-url/{object_id}",
-    tags=["no-auth"],
+
+@router.get(
+    "/get-url/{object_id}",
+    tags=["unauthorized"]
 )
 async def get_picture_url(
     object_id: str,
@@ -73,7 +72,7 @@ async def get_picture_url(
     log_file_operation("get_url_attempt", {
         "object_id": object_id
     })
-    
+
     try:
         await minio_handler.check_exist(object_id)
     except Exception as e:
@@ -82,7 +81,8 @@ async def get_picture_url(
             "error": str(e),
             "reason": "object_not_found"
         })
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"{e}")
     try:
         url = await minio_handler.get_object_url(object_id)
         log_file_operation("get_url_success", {
@@ -94,5 +94,6 @@ async def get_picture_url(
             "error": str(e),
             "reason": "url_generation_failed"
         })
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
     return {"url": url}
