@@ -18,8 +18,6 @@ pytestmark = pytest.mark.anyio
 engine = create_async_engine(db_url)
 
 # Required per https://anyio.readthedocs.io/en/stable/testing.html#using-async-fixtures-with-higher-scopes
-
-
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
