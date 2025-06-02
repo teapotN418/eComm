@@ -175,6 +175,27 @@ services:
       context: ./products_service
     ports:
       - "${PRODUCTS_PORT}:8000"
+    labels:
+    - "traefik.enable=true"
+
+    # Middleware ForwardAuth
+    - "traefik.http.middlewares.products-auth.forwardauth.address=http://auth_service:8000/auth/verify"
+    - "traefik.http.middlewares.products-auth.forwardauth.trustForwardHeader=true"
+    - "traefik.http.middlewares.products-auth.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+    # unauthorized
+    - "traefik.http.routers.products-noauth.rule=Host(`${TRAEFIK_HOST}`) && (PathPrefix(`/api/products`) || PathPrefix(`/api/providers`) || PathPrefix(`/api/categories`))"
+    - "traefik.http.routers.products-noauth.entrypoints=web"
+    - "traefik.http.routers.products-noauth.service=products-service"
+
+    # Authorized
+    - "traefik.http.routers.products-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/api/products`, `/api/providers`, `/api/categories`) && (Method(`POST`) || Method(`PUT`) || Method(`DELETE`))"
+    - "traefik.http.routers.products-auth.entrypoints=web"
+    - "traefik.http.routers.products-auth.middlewares=products-auth"
+    - "traefik.http.routers.products-auth.service=products-service"
+
+    - "traefik.http.services.products-service.loadbalancer.server.port=8000"
+
     env_file:
       - .env
     depends_on:
