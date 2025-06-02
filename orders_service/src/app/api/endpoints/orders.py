@@ -12,11 +12,41 @@ from .cart import get_cart_from_cookies
 
 router = APIRouter()
 
+# def require_admin(
+#     x_user_id: str = Header(...),
+#     x_user_role: str = Header(...),
+# ):
+#     if x_user_role != "admin":
+#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+#     return {"id": int(x_user_id), "role": x_user_role}
+
+# def get_current_user(
+#     x_user_id: str = Header(...),
+#     x_user_role: str = Header(...),
+# ):
+#     return {"id": int(x_user_id), "role": x_user_role}
+
+from fastapi import Header, HTTPException, status, Depends
+
+async def get_current_user_id(x_user_id: str = Header(None)):
+    if not x_user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    return int(x_user_id)
+
+async def require_authenticated_user(user_id: int, current_user_id: int = Depends(get_current_user_id)):
+    if user_id != current_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: user_id mismatch")
+
+async def require_admin(x_user_role: str = Header(None)):
+    if x_user_role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required")
+
 ########################### authenticated
 
 @router.post("/{user_id}", 
     tags=["authenticated"],
     response_model=OrderOut,
+    dependencies=[Depends(require_authenticated_user)]
 )
 async def create_order(
     request: Request,
@@ -44,6 +74,7 @@ async def create_order(
 @router.get("/me/{user_id}", 
     tags=["authenticated"],
     response_model=list[OrderOut],
+    dependencies=[Depends(require_authenticated_user)]
 )
 async def get_orders_user(
     user_id: int,
@@ -68,6 +99,7 @@ async def get_orders_user(
 @router.get("",
     response_model=list[OrderOut],
     tags=["admin"],
+    dependencies=[Depends(require_admin)]
 )
 async def get_all_orders(
     skip: int = 0, 
@@ -80,6 +112,7 @@ async def get_all_orders(
 @router.get("/{order_id}", 
     tags=["admin"],
     response_model=OrderOut,
+    dependencies=[Depends(require_admin)]
 )
 async def get_order(
     order_id: int,
@@ -94,6 +127,7 @@ async def get_order(
 
 @router.put("/{order_id}", 
     tags=["admin"],
+    dependencies=[Depends(require_admin)]
 )
 async def change_order(
     order_id: int,
@@ -110,6 +144,7 @@ async def change_order(
 
 @router.delete("/{order_id}", 
     tags=["admin"],
+    dependencies=[Depends(require_admin)]
 )
 async def remove_order(
     order_id: int,

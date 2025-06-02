@@ -207,6 +207,26 @@ services:
       context: ./orders_service
     ports:
       - "${ORDERS_PORT}:8000"
+    labels:
+      - "traefik.enable=true"
+      # ForwardAuth для всех маршрутов, кроме no-auth
+      - "traefik.http.middlewares.orders-auth.forwardauth.address=http://auth_service:8000/auth/verify"
+      - "traefik.http.middlewares.orders-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.orders-auth.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+      # no-auth (без авторизации)
+      - "traefik.http.routers.orders-noauth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/cart`)"
+      - "traefik.http.routers.orders-noauth.entrypoints=web"
+      - "traefik.http.routers.orders-noauth.service=orders-service"
+
+      # authenticated и admin с ForwardAuth middleware
+      - "traefik.http.routers.orders-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/orders`)"
+      - "traefik.http.routers.orders-auth.entrypoints=web"
+      - "traefik.http.routers.orders-auth.middlewares=orders-auth"
+      - "traefik.http.routers.orders-auth.service=orders-service"
+
+      # Сервис
+      - "traefik.http.services.orders-service.loadbalancer.server.port=8000"
     env_file:
       - .env
     depends_on:
