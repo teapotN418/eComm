@@ -261,6 +261,32 @@ services:
       context: ./reviews_service
     ports:
       - "${REVIEWS_PORT}:8000"
+    labels:
+    - "traefik.enable=true"
+
+    # ForwardAuth middleware — проверяет авторизацию через auth_service
+    - "traefik.http.middlewares.reviews-auth.forwardauth.address=http://auth_service:8000/auth/verify"
+    - "traefik.http.middlewares.reviews-auth.forwardauth.trustForwardHeader=true"
+    - "traefik.http.middlewares.reviews-auth.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+    # no-auth маршруты — без авторизации, отдельные роутеры для каждого PathPrefix
+    - "traefik.http.routers.reviews-noauth-products.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/api/reviews/product`)"
+    - "traefik.http.routers.reviews-noauth-products.entrypoints=web"
+    - "traefik.http.routers.reviews-noauth-products.service=reviews-service"
+
+    - "traefik.http.routers.reviews-noauth-users.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/api/reviews/user`)"
+    - "traefik.http.routers.reviews-noauth-users.entrypoints=web"
+    - "traefik.http.routers.reviews-noauth-users.service=reviews-service"
+
+    # authorized маршруты — требуют ForwardAuth
+    - "traefik.http.routers.reviews-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/api/reviews`) && !PathPrefix(`/api/reviews/product`) && !PathPrefix(`/api/reviews/user`)"
+    - "traefik.http.routers.reviews-auth.entrypoints=web"
+    - "traefik.http.routers.reviews-auth.middlewares=reviews-auth"
+    - "traefik.http.routers.reviews-auth.service=reviews-service"
+
+    # сервис
+    - "traefik.http.services.reviews-service.loadbalancer.server.port=8000"
+
     env_file:
       - .env
     depends_on:
@@ -268,6 +294,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
+
   # Kafka
 #   zookeeper:
 #     image: zookeeper:3.8
