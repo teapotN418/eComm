@@ -38,6 +38,27 @@ services:
       context: ./minio_service
     ports:
       - "${MINIO_SERVICE_PORT}:8000"
+    labels:
+        - "traefik.enable=true"
+
+      # /upload/file с авторизацией
+        - "traefik.http.routers.minio-upload.rule=Host(`${TRAEFIK_HOST}`) && Path(`/upload/file`)"
+        - "traefik.http.routers.minio-upload.entrypoints=web"
+        - "traefik.http.routers.minio-upload.middlewares=auth-middleware"
+        - "traefik.http.routers.minio-upload.service=minio-service"
+
+        # /get-url без авторизации
+        - "traefik.http.routers.minio-get-url.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/get-url`)"
+        - "traefik.http.routers.minio-get-url.entrypoints=web"
+        - "traefik.http.routers.minio-get-url.service=minio-service"
+
+        # Сервис minio
+        - "traefik.http.services.minio-service.loadbalancer.server.port=8000"
+
+        # Middleware для авторизации через auth_service
+        - "traefik.http.middlewares.auth-middleware.forwardauth.address=http://auth_service:8000/auth/verify"
+        - "traefik.http.middlewares.auth-middleware.forwardauth.trustForwardHeader=true"
+        - "traefik.http.middlewares.auth-middleware.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
     volumes:
       - minio_logs:/var/log/minio_service
     env_file:

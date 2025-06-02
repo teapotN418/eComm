@@ -11,8 +11,16 @@ from src.app.core.monitoring import logger, log_file_operation
 
 router = APIRouter()
 
+def require_admin(
+    x_user_id: str = Header(...),
+    x_user_role: str = Header(...),
+):
+    if x_user_role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    return {"id": int(x_user_id), "role": x_user_role}
+
 @router.post('/upload/file',
-    tags=["no-auth"],
+    tags=["auth"], dependencies=[Depends(require_admin)]
 )
 async def upload_file(
     file: UploadFile,

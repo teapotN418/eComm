@@ -223,7 +223,17 @@ async def register(
     return result
 
 # ###################################################### auth
-
+@router.get("",
+    response_model=list[UserShow],
+    tags=["admin"], dependencies=[Depends(require_admin)]
+)
+async def read_users(
+    skip: int = 0, 
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+):
+    users = await crud.get_users(skip=skip, limit=limit, session=db)
+    return users
 
 @router.get("/profile/{user_id}", tags=["authenticated"], response_model=UserShow)
 async def read_profile(
