@@ -21,7 +21,7 @@ app = FastAPI(
     description=settings.DESCRIPTION,
     version=settings.VERSION,
     openapi_tags=tags_metadata,
-    docs_url="/",
+    docs_url="/docs",
 )
 
 @app.middleware("http")

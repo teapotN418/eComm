@@ -148,24 +148,24 @@ async def login(
 #     return UserVerify(id=request.state.sub, role=request.state.data.get("role"))
 
 
-# @router.get("/verify", tags=["authenticated"], dependencies=[Depends(require_access)])
-# async def verify_token(request: Request):
-#     return Response(
-#         status_code=200,
-#         headers={
-#             "X-User-ID": str(request.state.sub),
-#             "X-User-Role": request.state.data.get("role", "")
-#         }
-#     )
-from starlette.responses import Response
-
 @router.get("/verify", tags=["authenticated"], dependencies=[Depends(require_access)])
 async def verify_token(request: Request):
-    headers = [
-        ("X-User-ID", str(request.state.sub)),
-        ("X-User-Role", request.state.data.get("role", ""))
-    ]
-    return Response(status_code=200, headers=headers)
+    return Response(
+        status_code=200,
+        headers={
+            "X-User-ID": str(request.state.sub),
+            "X-User-Role": request.state.data.get("role", "")
+        }
+    )
+# from starlette.responses import Response
+
+# @router.get("/verify", tags=["authenticated"], dependencies=[Depends(require_access)])
+# async def verify_token(request: Request):
+#     headers = {
+#         "X-User-ID": str(request.state.sub),
+#         "X-User-Role": request.state.data.get("role", "")
+#     }
+#     return Response(status_code=200, headers=headers)
 
 
 
