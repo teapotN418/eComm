@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Request
-from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi import Response
 
-from src.app.api.schemas import UserAuth, Role, UserVerify, ID
+from src.app.api.schemas import UserAuth, Role, ID
 from src.app.core import security
 from src.app.db import crud
 from src.app.api.deps import require_access, require_refresh, get_db, AsyncSession

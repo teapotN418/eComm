@@ -1,14 +1,12 @@
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi import UploadFile
-from fastapi import Header
 
 from src.app.services.async_minio import MinioServerAsync
 from src.app.api.deps import get_minio_service
-from src.app.core.monitoring import logger, log_file_operation
+from src.app.core.monitoring import log_file_operation
 from src.app.api.deps import require_admin
 
 router = APIRouter()
