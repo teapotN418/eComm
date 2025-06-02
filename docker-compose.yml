@@ -1,18 +1,6 @@
 version: '3.9'
 
 services:
-  # minio_service:
-  #   container_name: minio_service
-  #   build:
-  #     context: ./minio_service
-  #   ports:
-  #     - "${MINIO_PORT}:8000"
-  #   env_file:
-  #     - .env
-    #volumes:
-    #  - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
-    #  - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
-
   traefik:
     image: traefik:v2.11
     container_name: traefik
@@ -34,7 +22,11 @@ services:
       context: ./auth_service
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.auth.rule=Host(`localhost`)"
+      - "traefik.http.routers.auth-public.rule=Host(`localhost`) && Path(`/auth/login`)"
+      - "traefik.http.routers.auth-public.entrypoints=web"
+      - "traefik.http.routers.auth-public.service=auth"
+
       - "traefik.http.services.auth.loadbalancer.server.port=8000"
     ports:
       - "${AUTH_PORT}:8000"
@@ -46,18 +38,75 @@ services:
     networks:
       - monitoring
 
+
+
+
+
   users_service:
     container_name: users_service
     build:
       context: ./users_service
     labels:
+        # - "traefik.enable=true"
+        
+
+        # Публичный маршрут /register — без авторизации
+        # - "traefik.http.routers.users-public.rule=Host(`localhost`) && Path(`/users/register`)"
+        # - "traefik.http.routers.users-public.rule=Host(`localhost`) && Path(`/users/user-docs`)"
+        # - "traefik.http.routers.users-public.entrypoints=web"
+        # - "traefik.http.routers.users-public.service=users"
+        # Публичный доступ к Swagger и регистрации
+        # - "traefik.http.routers.users-public-register.rule=Host(`localhost`) && Path(`/users/register`)"
+        # - "traefik.http.routers.users-public-docs.rule=Host(`localhost`) && Path(`/users/user-docs`)"
+        # - "traefik.http.routers.users-public-register.entrypoints=web"
+        # - "traefik.http.routers.users-public-docs.entrypoints=web"
+        # - "traefik.http.routers.users-public-register.service=users"
+        # - "traefik.http.routers.users-public-docs.service=users"
+
+        
+        # # Все остальные маршруты — с авторизацией через /verify
+        # - "traefik.http.routers.users.rule=Host(`localhost`)"
+        # - "traefik.http.routers.users.entrypoints=web"
+        # - "traefik.http.routers.users.middlewares=auth-middleware"
+        # - "traefik.http.routers.users.service=users"
+
+        # #  Middleware для авторизации
+        # - "traefik.http.middlewares.auth-middleware.forwardauth.address=http://auth_service:8000/auth/verify"
+        # - "traefik.http.middlewares.auth-middleware.forwardauth.trustForwardHeader=true"
+        # - "traefik.http.middlewares.auth-middleware.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+        # #  Service
+        # - "traefik.http.services.users.loadbalancer.server.port=8000"
+    # 📘 Swagger (документация) без авторизации    labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.users.rule=Host(`users.localhost`)"
-      - "traefik.http.routers.users.middlewares=auth-middleware"
-      - "traefik.http.middlewares.auth-middleware.forwardauth.address=http://auth_service:8000/verify" # перейти к /verify
-      - "traefik.http.middlewares.auth-middleware.forwardauth.trustForwardHeader=true"
-      - "traefik.http.middlewares.auth-middleware.forwardauth.authResponseHeaders=X-User-Id,X-User-Role" # id, role 
+
+      # 🔓 Swagger доступен без авторизации
+      # - "traefik.http.routers.users-docs.rule=Host(`localhost`) && Path(`/users/docs`)"
+      # - "traefik.http.routers.users-docs.priority=20"
+      # - "traefik.http.routers.users-docs.entrypoints=web"
+      # - "traefik.http.routers.users-docs.service=users"
+
+      # 🔓 Регистрация доступна без авторизации
+      - "traefik.http.routers.users-register.rule=PathPrefix(`/users`)"
+      - "traefik.http.routers.users-register.priority=20"
+      - "traefik.http.routers.users-register.entrypoints=web"
+      - "traefik.http.routers.users-register.service=users"
+
+      # 🔒 Все остальные маршруты /users/** требуют авторизацию
+      # - "traefik.http.routers.users.rule=Host(`localhost`) && PathPrefix(`/users/`)"
+      # - "traefik.http.routers.users.priority=10"
+      # - "traefik.http.routers.users.entrypoints=web"
+      # - "traefik.http.routers.users.middlewares=auth-middleware"
+      # - "traefik.http.routers.users.service=users"
+
+      # 🔐 Middleware для авторизации через auth_service
+      # - "traefik.http.middlewares.auth-middleware.forwardauth.address=http://auth_service:8000/auth/verify"
+      # - "traefik.http.middlewares.auth-middleware.forwardauth.trustForwardHeader=true"
+      # - "traefik.http.middlewares.auth-middleware.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+      # 📦 Сервис users
       - "traefik.http.services.users.loadbalancer.server.port=8000"
+
     ports:
       - "${USERS_PORT}:8000"
     env_file:
@@ -87,72 +136,6 @@ services:
       - POSTGRES_DB=${USERS_POSTGRES_DB}
     networks:
       - monitoring
-
-#   prometheus:
-#     image: prom/prometheus:latest
-#     container_name: prometheus
-#     ports:
-#       - "9090:9090"
-#     volumes:
-#       - ./prometheus:/etc/prometheus
-#       - prometheus_data:/prometheus
-#     command:
-#       - '--config.file=/etc/prometheus/prometheus.yml'
-#       - '--storage.tsdb.path=/prometheus'
-#       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-#       - '--web.console.templates=/usr/share/prometheus/consoles'
-#     networks:
-#       - monitoring
-
-#   loki:
-#     image: grafana/loki:latest
-#     container_name: loki
-#     ports:
-#       - "3100:3100"
-#     command: -config.file=/etc/loki/local-config.yaml
-#     volumes:
-#       - ./loki:/etc/loki
-#       - loki_data:/loki
-#       - loki_wal:/wal
-#     user: "root"
-#     networks:
-#       - monitoring
-
-#   promtail:
-#     image: grafana/promtail:latest
-#     container_name: promtail
-#     volumes:
-#       - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
-#       - /var/run/docker.sock:/var/run/docker.sock
-#     command: -config.file=/etc/promtail/config.yaml
-#     networks:
-#       - monitoring
-
-#   grafana:
-#     image: grafana/grafana:latest
-#     container_name: grafana
-#     ports:
-#       - "3000:3000"
-#     volumes:
-#       - ./grafana/provisioning:/etc/grafana/provisioning
-#       - grafana_data:/var/lib/grafana
-#     environment:
-#       - GF_SECURITY_ADMIN_USER=admin
-#       - GF_SECURITY_ADMIN_PASSWORD=admin
-#       - GF_USERS_ALLOW_SIGN_UP=false
-#     depends_on:
-#       - prometheus
-#       - loki
-#     networks:
-#       - monitoring
-
 networks:
   monitoring:
     driver: bridge
-
-# volumes:
-#   prometheus_data:
-#   loki_data:
-#   loki_wal:
-#   grafana_data:
-    

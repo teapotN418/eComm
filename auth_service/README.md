@@ -8,7 +8,7 @@ docker compose up -d
 
 3. Применяете миграции в базе данных:
 ```sh
-docker exec -it fastapi_users alembic upgrade head
+docker exec -it users_service alembic upgrade head
 ```
 
 4. Сервис доступен по адресу: http://0.0.0.0:8000/
