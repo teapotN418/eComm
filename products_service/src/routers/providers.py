@@ -8,13 +8,15 @@ from src.models.orm_models import Provider
 
 router = APIRouter()
 
+
 def require_admin(
     x_user_id: str = Header(...),
     x_user_role: str = Header(...),
 ):
     if x_user_role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
-    return {"id": int(x_user_id), "role": x_user_role}s
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    return {"id": int(x_user_id), "role": x_user_role}
 
 
 @router.get('/', tags=['unauthorized'], response_model=list[ProviderOut])
