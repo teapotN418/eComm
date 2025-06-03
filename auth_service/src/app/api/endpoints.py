@@ -47,22 +47,22 @@ async def verify_token(request: Request):
     )
 
 
-@router.post(
-    "/verify-role",
-    tags=["authorized"],
-    response_model=ID,
-    dependencies=[Depends(require_access)],
-)
-async def verify_token_role(
-    role: Role,
-    request: Request,
-):
-    if request.state.data.get("role") == role:
-        return ID(id=request.state.sub)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
+# @router.post(
+#     "/verify-role",
+#     tags=["authorized"],
+#     response_model=ID,
+#     dependencies=[Depends(require_access)],
+# )
+# async def verify_token_role(
+#     role: Role,
+#     request: Request,
+# ):
+#     if request.state.data.get("role") == role:
+#         return ID(id=request.state.sub)
+#     else:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#         )
 
 
 @router.post(

@@ -73,3 +73,12 @@ async def test_get_wrong(client):
     response = await client.get(f"/files/get-url/{fake_id}")
     
     assert response.status_code == 404
+
+async def test_no_headers(client, mock_image_file):
+    files = {"file": ("test_image.jpg", mock_image_file, "image/jpeg")}
+    response = await client.post(
+        "/files/upload/file",
+        files=files
+    )
+    
+    assert response.status_code == 422
