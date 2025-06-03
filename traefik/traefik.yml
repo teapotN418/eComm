@@ -1,8 +1,10 @@
 entryPoints:
   web:
     address: ":80"
+
   dashboard:
     address: ":8082"
+  
   websecure: 
     address: ":443"
 
@@ -11,7 +13,6 @@ log:
 
 api:
   dashboard: true
-  insecure: true
 
 providers:
   docker:
