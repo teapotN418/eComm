@@ -33,14 +33,11 @@ services:
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
-
-      - "traefik.http.middlewares.dashboard-strip-prefix.stripPrefix.prefixes=/dashboard"
-      - "traefik.http.routers.dashboard.middlewares=dashboard-strip-prefix"
     command:
       - "--configFile=/traefik.yml"
     networks:
