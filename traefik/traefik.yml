@@ -13,6 +13,7 @@ log:
 
 api:
   dashboard: true
+  insecure: false
 
 providers:
   docker:
