@@ -194,18 +194,23 @@ services:
     labels:
       - "traefik.enable=true"
 
+      # Swagger
+      - "traefik.http.routers.products_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/products_docs`, `/products_openapi.json`)"
+      - "traefik.http.routers.products_docs.entrypoints=web"
+      - "traefik.http.routers.products_docs.service=products-service"
+
       # Middleware ForwardAuth
       - "traefik.http.middlewares.products-auth.forwardauth.address=http://auth_service:8000/auth/verify"
       - "traefik.http.middlewares.products-auth.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.products-auth.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
 
       # unauthorized
-      - "traefik.http.routers.products-noauth.rule=Host(`${TRAEFIK_HOST}`) && (PathPrefix(`/api/products`) || PathPrefix(`/api/providers`) || PathPrefix(`/api/categories`))"
+      - "traefik.http.routers.products-noauth.rule=Host(`${TRAEFIK_HOST}`) && (PathPrefix(`/products`) || PathPrefix(`/providers`) || PathPrefix(`/categories`))"
       - "traefik.http.routers.products-noauth.entrypoints=web"
       - "traefik.http.routers.products-noauth.service=products-service"
 
       # Authorized
-      - "traefik.http.routers.products-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/api/products`, `/api/providers`, `/api/categories`) && (Method(`POST`) || Method(`PUT`) || Method(`DELETE`))"
+      - "traefik.http.routers.products-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/products`, `/providers`, `/categories`) && (Method(`POST`) || Method(`PUT`) || Method(`DELETE`))"
       - "traefik.http.routers.products-auth.entrypoints=web"
       - "traefik.http.routers.products-auth.middlewares=products-auth"
       - "traefik.http.routers.products-auth.service=products-service"

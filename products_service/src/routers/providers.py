@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi import Header
-from fastapi import Depends
+from fastapi import Depends, status
 
 from src.repository.products import products_repo
 from src.models.pydantic_schemas import ProviderOut, ProviderIn
@@ -35,7 +35,7 @@ async def get_provider(id: int):
 
 @router.post(
     '/',
-    tags=['authorized'], dependencies=[Depends(require_admin)],
+    tags=['admin'], dependencies=[Depends(require_admin)],
     response_model=ProviderOut,
     status_code=201
 )
@@ -51,7 +51,7 @@ async def insert_provider(provider: ProviderIn):
 
 @router.put(
     '/{id}',
-    tags=['authorized'], dependencies=[Depends(require_admin)],
+    tags=['admin'], dependencies=[Depends(require_admin)],
     response_model=ProviderOut,
     status_code=201
 )
@@ -68,7 +68,7 @@ async def update_provider(id: int, new_data: ProviderIn):
     return provider
 
 
-@router.delete('/{id}', tags=['authorized'], dependencies=[Depends(require_admin)], status_code=204)
+@router.delete('/{id}', tags=['admin'], dependencies=[Depends(require_admin)], status_code=204)
 async def delete_provider(id: int):
     provider = await products_repo.get_provider_by_id(id)
     if provider == None:
