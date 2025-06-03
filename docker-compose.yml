@@ -95,6 +95,9 @@ services:
       - "traefik.http.routers.auth_docs.service=auth"
 
       - "traefik.http.routers.auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.auth.service=auth"
 
       - "traefik.http.routers.auth-public.rule=Host(`${TRAEFIK_HOST}`) && Path(`/auth/login`)"
       - "traefik.http.routers.auth-public.entrypoints=websecure"
