@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import HTTPException
 from fastapi import status
 from fastapi import Request, Response, HTTPException
@@ -12,7 +11,6 @@ from src.app.core.config import settings
 router = APIRouter()
 
 
-
 async def get_cart_from_cookies(request: Request) -> Cart:
     cart_data = request.cookies.get(settings.CART_COOKIE_LOCATION)
     if cart_data:
@@ -22,6 +20,7 @@ async def get_cart_from_cookies(request: Request) -> Cart:
         except (json.JSONDecodeError, ValueError):
             pass
     return Cart()
+
 
 async def set_cart_to_cookies(response: Response, cart: Cart) -> None:
     cart_data = json.dumps(cart.model_dump())
@@ -36,10 +35,10 @@ async def set_cart_to_cookies(response: Response, cart: Cart) -> None:
     )
 
 
-
-@router.get("", 
+@router.get(
+    "",
     response_model=Cart,
-    tags=["no-auth"],
+    tags=["unauthorized"]
 )
 async def get_cart(
     request: Request,
@@ -47,36 +46,36 @@ async def get_cart(
     return await get_cart_from_cookies(request)
 
 
-
-@router.post("/items", 
+@router.post(
+    "/items",
     response_model=Cart,
-    tags=["no-auth"],
+    tags=["unauthorized"],
 )
 async def add_item_to_cart(
-    request: Request, 
-    item: Item, 
+    request: Request,
+    item: Item,
     response: Response,
 ):
     cart = await get_cart_from_cookies(request)
-    
+
     existing_item = next(
         (i for i in cart.pr if i.id == item.id),
         None
     )
-    
+
     if existing_item:
         existing_item.q += item.q
     else:
         cart.pr.append(item)
-    
+
     await set_cart_to_cookies(response, cart)
     return cart
 
 
-
-@router.put("/items/{product_id}", 
+@router.put(
+    "/items/{product_id}",
     response_model=Cart,
-    tags=["no-auth"],
+    tags=["unauthorized"],
 )
 async def update_cart_item(
     request: Request,
@@ -85,27 +84,29 @@ async def update_cart_item(
     response: Response,
 ):
     if quantity <= 0:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Quantity must be positive")
-    
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Quantity must be positive")
+
     cart = await get_cart_from_cookies(request)
-    
+
     item = next(
         (i for i in cart.pr if i.id == product_id),
         None
     )
-    
+
     if not item:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found in cart")
-    
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Item not found in cart")
+
     item.q = quantity
     await set_cart_to_cookies(response, cart)
     return cart
 
 
-
-@router.delete("/items/{product_id}", 
+@router.delete(
+    "/items/{product_id}",
     response_model=Cart,
-    tags=["no-auth"],
+    tags=["unauthorized"],
 )
 async def remove_item_from_cart(
     request: Request,
@@ -115,7 +116,7 @@ async def remove_item_from_cart(
     cart = await get_cart_from_cookies(request)
 
     original_count = len(cart.pr)
-    
+
     cart.pr = [item for item in cart.pr if item.id != product_id]
 
     if len(cart.pr) == original_count:
@@ -123,18 +124,18 @@ async def remove_item_from_cart(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Item with product_id {product_id} not found in cart"
         )
-    
+
     await set_cart_to_cookies(response, cart)
     return cart
 
 
-
-@router.delete("", 
+@router.delete(
+    "",
     response_model=Cart,
-    tags=["no-auth"],
+    tags=["unauthorized"],
 )
 async def clear_cart(
-    request: Request, 
+    request: Request,
     response: Response,
 ):
     cart = await get_cart_from_cookies(request)

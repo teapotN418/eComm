@@ -1,0 +1,34 @@
+# api:
+#   dashboard: true
+#   insecure: true
+
+# entryPoints:
+#   web:
+#     address: ":80"
+#   traefik:
+#     address: ":8080"
+
+# providers:
+#   docker:
+#     exposedByDefault: false
+entryPoints:
+  web:
+    address: ":80"
+  dashboard:
+    address: ":8082"
+
+log:
+  level: DEBUG
+
+api:
+  dashboard: true
+  insecure: true
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: monitoring
+
+# Чтобы Traefik сохранял заголовки от /verify
+forwardedHeaders:
+  insecure: true

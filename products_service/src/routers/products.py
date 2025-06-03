@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from elasticsearch import AsyncElasticsearch
+from fastapi import Header
+from fastapi import Depends, status
 
 from src.repository.products import products_repo
 from src.models.pydantic_schemas import ProductOut, ProductIn
@@ -8,6 +10,16 @@ from src.config import config
 
 router = APIRouter()
 es_client = AsyncElasticsearch(hosts=config.ES_HOSTS)
+
+
+def require_admin(
+    x_user_id: str = Header(...),
+    x_user_role: str = Header(...),
+):
+    if x_user_role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    return {"id": int(x_user_id), "role": x_user_role}
 
 
 @router.get('/', tags=['unauthorized'], response_model=list[ProductOut])
@@ -75,7 +87,7 @@ async def get_product(id: int):
 
 @router.post(
     '/',
-    tags=['authorized'],
+    tags=['admin'], dependencies=[Depends(require_admin)],
     response_model=ProductOut,
     status_code=201
 )
@@ -103,7 +115,7 @@ async def insert_product(product: ProductIn):
 
 @router.put(
     '/{id}',
-    tags=['authorized'],
+    tags=['admin'], dependencies=[Depends(require_admin)],
     response_model=ProductOut,
     status_code=201
 )
@@ -131,7 +143,7 @@ async def update_product(id: int, new_data: ProductIn):
     return product
 
 
-@router.delete('/{id}', tags=['authorized'], status_code=204)
+@router.delete('/{id}', tags=['admin'], dependencies=[Depends(require_admin)], status_code=204)
 async def delete_product(id: int):
     product = await products_repo.get_product_by_id(id)
     if product == None:

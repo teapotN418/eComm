@@ -1,22 +1,25 @@
+from fastapi import HTTPException, status, Depends
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import HTTPException
 from fastapi import status
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, HTTPException
 from fastapi import Depends
 
 import src.app.db.crud as crud
 from src.app.api.schemas.orders import OrderStatus, Status, OrderOut
-from src.app.api.deps import get_db, AsyncSession
+from src.app.api.deps import get_db, AsyncSession, require_authenticated_user, require_admin
 from .cart import get_cart_from_cookies
 
 router = APIRouter()
 
-########################### authenticated
+# authenticated
 
-@router.post("/user/{user_id}", 
-    tags=["authenticated"],
+
+@router.post(
+    "/user/{user_id}",
+    tags=["authorized"],
     response_model=OrderOut,
+    dependencies=[Depends(require_authenticated_user)]
 )
 async def create_order(
     request: Request,
@@ -25,25 +28,29 @@ async def create_order(
 ):
     cart = await get_cart_from_cookies(request)
     try:
-        if len(cart.pr)==0:
+        if len(cart.pr) == 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
-        )
-        order_data = [(item["id"], item["q"]) for item in cart.model_dump()["pr"]]
+            )
+        order_data = [(item["id"], item["q"])
+                      for item in cart.model_dump()["pr"]]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}"
         )
     order_with_status = OrderStatus(
-        user_id = user_id,
+        user_id=user_id,
         status=Status.created,
     )
     order = await crud.create_order(order_with_status, order_data, db)
     return order
 
-@router.get("/user/me/{user_id}", 
-    tags=["authenticated"],
+
+@router.get(
+    "/user/me/{user_id}",
+    tags=["authorized"],
     response_model=list[OrderOut],
+    dependencies=[Depends(require_authenticated_user)]
 )
 async def get_orders_user(
     user_id: int,
@@ -54,7 +61,8 @@ async def get_orders_user(
 
 # ########################### admin
 
-@router.get("/user/{user_id}", 
+@router.get(
+    "/user/{user_id}", 
     tags=["admin"],
     response_model=list[OrderOut],
 )
@@ -65,21 +73,26 @@ async def get_orders_user(
     orders = await crud.get_orders_by_user(user_id, db)
     return orders
 
-@router.get("",
+
+@router.get(
+    "",
     response_model=list[OrderOut],
     tags=["admin"],
+    dependencies=[Depends(require_admin)]
 )
 async def get_all_orders(
-    skip: int = 0, 
+    skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
 ):
     orders = await crud.get_orders(skip=skip, limit=limit, session=db)
     return orders
 
-@router.get("/order/{order_id}", 
+@router.get(
+    "/order/{order_id}", 
     tags=["admin"],
     response_model=OrderOut,
+    dependencies=[Depends(require_admin)]
 )
 async def get_order(
     order_id: int,
@@ -92,7 +105,8 @@ async def get_order(
         )
     return order
 
-@router.put("/order/{order_id}", 
+@router.put(
+    "/order/{order_id}", 
     tags=["admin"],
     response_model=OrderOut,
 )
@@ -109,8 +123,10 @@ async def change_order(
     changed_order = await crud.change_status(order_id, order_status, db)
     return changed_order
 
-@router.delete("/order/{order_id}", 
+@router.delete(
+    "/order/{order_id}", 
     tags=["admin"],
+    dependencies=[Depends(require_admin)]
 )
 async def remove_order(
     order_id: int,

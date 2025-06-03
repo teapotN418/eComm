@@ -1,10 +1,22 @@
 from fastapi import APIRouter, HTTPException
+from fastapi import Header
+from fastapi import Depends, status
 
 from src.repository.products import products_repo
 from src.models.pydantic_schemas import ProviderOut, ProviderIn
 from src.models.orm_models import Provider
 
 router = APIRouter()
+
+
+def require_admin(
+    x_user_id: str = Header(...),
+    x_user_role: str = Header(...),
+):
+    if x_user_role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    return {"id": int(x_user_id), "role": x_user_role}
 
 
 @router.get('/', tags=['unauthorized'], response_model=list[ProviderOut])
@@ -23,7 +35,7 @@ async def get_provider(id: int):
 
 @router.post(
     '/',
-    tags=['authorized'],
+    tags=['admin'], dependencies=[Depends(require_admin)],
     response_model=ProviderOut,
     status_code=201
 )
@@ -39,7 +51,7 @@ async def insert_provider(provider: ProviderIn):
 
 @router.put(
     '/{id}',
-    tags=['authorized'],
+    tags=['admin'], dependencies=[Depends(require_admin)],
     response_model=ProviderOut,
     status_code=201
 )
@@ -56,7 +68,7 @@ async def update_provider(id: int, new_data: ProviderIn):
     return provider
 
 
-@router.delete('/{id}', tags=['authorized'], status_code=204)
+@router.delete('/{id}', tags=['admin'], dependencies=[Depends(require_admin)], status_code=204)
 async def delete_provider(id: int):
     provider = await products_repo.get_provider_by_id(id)
     if provider == None:
