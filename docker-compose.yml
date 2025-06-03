@@ -246,6 +246,12 @@ services:
       - "${ORDERS_PORT}:8000"
     labels:
       - "traefik.enable=true"
+
+      # Swagger
+      - "traefik.http.routers.orders_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/orders_docs`, `/orders_openapi.json`)"
+      - "traefik.http.routers.orders_docs.entrypoints=web"
+      - "traefik.http.routers.orders_docs.service=orders-service"
+
       # ForwardAuth для всех маршрутов, кроме no-auth
       - "traefik.http.middlewares.orders-auth.forwardauth.address=http://auth_service:8000/auth/verify"
       - "traefik.http.middlewares.orders-auth.forwardauth.trustForwardHeader=true"

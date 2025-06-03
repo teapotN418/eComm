@@ -14,12 +14,15 @@
 entryPoints:
   web:
     address: ":80"
+  dashboard:
+    address: ":8082"
 
 log:
   level: DEBUG
 
 api:
   dashboard: true
+  insecure: true
 
 providers:
   docker:

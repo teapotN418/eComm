@@ -1,50 +1,23 @@
+from fastapi import HTTPException, status, Depends
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import HTTPException
 from fastapi import status
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, HTTPException
 from fastapi import Depends
 
 import src.app.db.crud as crud
 from src.app.api.schemas.orders import OrderStatus, Status, OrderOut
-from src.app.api.deps import get_db, AsyncSession
+from src.app.api.deps import get_db, AsyncSession, require_authenticated_user, require_admin
 from .cart import get_cart_from_cookies
 
 router = APIRouter()
 
-# def require_admin(
-#     x_user_id: str = Header(...),
-#     x_user_role: str = Header(...),
-# ):
-#     if x_user_role != "admin":
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
-#     return {"id": int(x_user_id), "role": x_user_role}
+# authenticated
 
-# def get_current_user(
-#     x_user_id: str = Header(...),
-#     x_user_role: str = Header(...),
-# ):
-#     return {"id": int(x_user_id), "role": x_user_role}
 
-from fastapi import Header, HTTPException, status, Depends
-
-async def get_current_user_id(x_user_id: str = Header(None)):
-    if not x_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    return int(x_user_id)
-
-async def require_authenticated_user(user_id: int, current_user_id: int = Depends(get_current_user_id)):
-    if user_id != current_user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: user_id mismatch")
-
-async def require_admin(x_user_role: str = Header(None)):
-    if x_user_role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required")
-
-########################### authenticated
-
-@router.post("/{user_id}", 
-    tags=["authenticated"],
+@router.post(
+    "/{user_id}",
+    tags=["authorized"],
     response_model=OrderOut,
     dependencies=[Depends(require_authenticated_user)]
 )
@@ -55,24 +28,27 @@ async def create_order(
 ):
     cart = await get_cart_from_cookies(request)
     try:
-        if len(cart.pr)==0:
+        if len(cart.pr) == 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
-        )
-        order_data = [(item["id"], item["q"]) for item in cart.model_dump()["pr"]]
+            )
+        order_data = [(item["id"], item["q"])
+                      for item in cart.model_dump()["pr"]]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}"
         )
     order_with_status = OrderStatus(
-        user_id = user_id,
+        user_id=user_id,
         status=Status.created,
     )
     order = await crud.create_order(order_with_status, order_data, db)
     return order
 
-@router.get("/me/{user_id}", 
-    tags=["authenticated"],
+
+@router.get(
+    "/me/{user_id}",
+    tags=["authorized"],
     response_model=list[OrderOut],
     dependencies=[Depends(require_authenticated_user)]
 )
@@ -85,7 +61,9 @@ async def get_orders_user(
 
 # ########################### admin
 
-@router.get("/{user_id}", 
+
+@router.get(
+    "/{user_id}",
     tags=["admin"],
     response_model=list[OrderOut],
 )
@@ -96,20 +74,24 @@ async def get_orders_user(
     orders = await crud.get_orders_by_user(user_id, db)
     return orders
 
-@router.get("",
+
+@router.get(
+    "",
     response_model=list[OrderOut],
     tags=["admin"],
     dependencies=[Depends(require_admin)]
 )
 async def get_all_orders(
-    skip: int = 0, 
+    skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
 ):
     orders = await crud.get_orders(skip=skip, limit=limit, session=db)
     return orders
 
-@router.get("/{order_id}", 
+
+@router.get(
+    "/{order_id}",
     tags=["admin"],
     response_model=OrderOut,
     dependencies=[Depends(require_admin)]
@@ -125,7 +107,9 @@ async def get_order(
         )
     return order
 
-@router.put("/{order_id}", 
+
+@router.put(
+    "/{order_id}",
     tags=["admin"],
     dependencies=[Depends(require_admin)]
 )
@@ -142,7 +126,9 @@ async def change_order(
     changed_order = await crud.change_status(order_id, order_status, db)
     return changed_order
 
-@router.delete("/{order_id}", 
+
+@router.delete(
+    "/{order_id}",
     tags=["admin"],
     dependencies=[Depends(require_admin)]
 )
