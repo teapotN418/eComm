@@ -1,33 +1,29 @@
-# api:
-#   dashboard: true
-#   insecure: true
-
-# entryPoints:
-#   web:
-#     address: ":80"
-#   traefik:
-#     address: ":8080"
-
-# providers:
-#   docker:
-#     exposedByDefault: false
 entryPoints:
   web:
     address: ":80"
-  dashboard:
-    address: ":8082"
+  
+  websecure: 
+    address: ":443"
 
 log:
   level: DEBUG
 
 api:
   dashboard: true
-  insecure: true
+  insecure: false
 
 providers:
   docker:
     exposedByDefault: false
     network: monitoring
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: demo.13b.gl@gmail.com       
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
 
 # Чтобы Traefik сохранял заголовки от /verify
 forwardedHeaders:
