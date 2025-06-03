@@ -14,7 +14,7 @@ router = APIRouter()
 
 ########################### authenticated
 
-@router.post("/{user_id}", 
+@router.post("/user/{user_id}", 
     tags=["authenticated"],
     response_model=OrderOut,
 )
@@ -41,7 +41,7 @@ async def create_order(
     order = await crud.create_order(order_with_status, order_data, db)
     return order
 
-@router.get("/me/{user_id}", 
+@router.get("/user/me/{user_id}", 
     tags=["authenticated"],
     response_model=list[OrderOut],
 )
@@ -54,7 +54,7 @@ async def get_orders_user(
 
 # ########################### admin
 
-@router.get("/{user_id}", 
+@router.get("/user/{user_id}", 
     tags=["admin"],
     response_model=list[OrderOut],
 )
@@ -77,7 +77,7 @@ async def get_all_orders(
     orders = await crud.get_orders(skip=skip, limit=limit, session=db)
     return orders
 
-@router.get("/{order_id}", 
+@router.get("/order/{order_id}", 
     tags=["admin"],
     response_model=OrderOut,
 )
@@ -92,8 +92,9 @@ async def get_order(
         )
     return order
 
-@router.put("/{order_id}", 
+@router.put("/order/{order_id}", 
     tags=["admin"],
+    response_model=OrderOut,
 )
 async def change_order(
     order_id: int,
@@ -108,7 +109,7 @@ async def change_order(
     changed_order = await crud.change_status(order_id, order_status, db)
     return changed_order
 
-@router.delete("/{order_id}", 
+@router.delete("/order/{order_id}", 
     tags=["admin"],
 )
 async def remove_order(

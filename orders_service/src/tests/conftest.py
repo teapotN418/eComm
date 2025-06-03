@@ -1,8 +1,9 @@
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, Cookies
 import asyncio
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncTransaction, AsyncConnection, AsyncSession, create_async_engine
+import json
 
 from src.app.core.config import settings
 from src.app.api.deps import get_db

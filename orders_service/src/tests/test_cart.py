@@ -61,3 +61,10 @@ async def test_put_delete_items(client: AsyncClient, test_product_data: dict, te
     response = await client.delete(f"/cart/items/{id}")
     assert response.status_code == 200
     assert response.json()["pr"] == [test_product_data_2]
+    client.cookies = dict(response.cookies)
+
+    response = await client.delete(f"/cart/items/{id}")
+    assert response.status_code == 404
+
+    response = await client.put(f"/cart/items/{id}?quantity={300}")
+    assert response.status_code == 404
