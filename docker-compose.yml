@@ -34,7 +34,7 @@ services:
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.dashboard.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`)"
       - "traefik.http.routers.dashboard.entrypoints=dashboard"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
