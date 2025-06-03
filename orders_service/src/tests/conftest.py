@@ -1,15 +1,15 @@
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, Cookies
 import asyncio
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncTransaction, AsyncConnection, AsyncSession, create_async_engine
+import json
 
 from src.app.core.config import settings
-from src.app.core.security import security_config
 from src.app.api.deps import get_db
 from src.app.main import app
 
-backend_url = "http://localhost:" + settings.BACKEND_PORT
+backend_url = "http://localhost:8000"
 
 db_url = settings.DATABASE_URL
 

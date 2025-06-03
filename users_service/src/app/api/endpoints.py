@@ -51,14 +51,12 @@ async def read_users(
     return users
 
 
-@router.get("/profile/{user_id}", tags=["authorized"], response_model=UserShow)
+@router.get("/profile", tags=["authorized"], response_model=UserShow)
 async def read_profile(
-    user_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["id"] != user_id and current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Access denied")
+    user_id = current_user["id"]
 
     user = await crud.get_user(user_id=user_id, session=db)
     if user is None:
@@ -66,15 +64,13 @@ async def read_profile(
     return user
 
 
-@router.put("/profile/{user_id}", tags=["authorized"])
+@router.put("/profile", tags=["authorized"])
 async def update_profile(
-    user_id: int,
     password_form: Password,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["id"] != user_id and current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Access denied")
+    user_id = current_user["id"]
 
     user = await crud.get_user(user_id=user_id, session=db)
     if user is None:
@@ -83,6 +79,25 @@ async def update_profile(
     await crud.update_user(user.id, password_form.password, session=db)
     return {"detail": "Password changed"}
 
+@router.delete("/profile", 
+    tags=["authorized"],
+)
+async def delete_profile(
+    # response: Response,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["id"]
+    user = await crud.get_user(user_id=user_id, session=db)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    await crud.delete_user(user, session=db)
+    # response.delete_cookie(security.security_config.JWT_ACCESS_COOKIE_NAME, security.security_config.JWT_ACCESS_COOKIE_PATH)
+    # response.delete_cookie(security.security_config.JWT_REFRESH_COOKIE_NAME, security.security_config.JWT_REFRESH_COOKIE_PATH)
+    # ЖЕЛАТЕЛЬНО КОНЕЧНО ТОКЕНЫ ЕЩЁ ДОБАВЛЯТЬ В REVOKED
+    return {"detail": "User deleted"}
 
 @router.post(
     "",
@@ -101,7 +116,7 @@ async def create_user(
 
 
 @router.get(
-    "/by_id/{user_id}",
+    "/{user_id}",
     response_model=UserShow,
     tags=["admin"],
     dependencies=[Depends(require_admin)]
@@ -117,7 +132,7 @@ async def read_user(
 
 
 @router.put(
-    "/by_id/{user_id}",
+    "/{user_id}",
     tags=["admin"],
     dependencies=[Depends(require_admin)],
 )
@@ -134,7 +149,7 @@ async def change_user(
 
 
 @router.delete(
-    "/by_id/{user_id}",
+    "/{user_id}",
     tags=["admin"],
     dependencies=[Depends(require_admin)],
 )

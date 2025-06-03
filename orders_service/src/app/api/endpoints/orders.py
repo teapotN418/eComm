@@ -7,7 +7,7 @@ from fastapi import Depends
 
 import src.app.db.crud as crud
 from src.app.api.schemas.orders import OrderStatus, Status, OrderOut
-from src.app.api.deps import get_db, AsyncSession, require_authenticated_user, require_admin
+from src.app.api.deps import get_db, AsyncSession, require_authenticated_user, require_admin, get_current_user_id
 from .cart import get_cart_from_cookies
 
 router = APIRouter()
@@ -16,15 +16,14 @@ router = APIRouter()
 
 
 @router.post(
-    "/{user_id}",
+    "/user",
     tags=["authorized"],
-    response_model=OrderOut,
-    dependencies=[Depends(require_authenticated_user)]
+    response_model=OrderOut
 )
 async def create_order(
     request: Request,
-    user_id: int,
     db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
 ):
     cart = await get_cart_from_cookies(request)
     try:
@@ -47,29 +46,28 @@ async def create_order(
 
 
 @router.get(
-    "/me/{user_id}",
+    "/user",
     tags=["authorized"],
     response_model=list[OrderOut],
-    dependencies=[Depends(require_authenticated_user)]
 )
 async def get_orders_user(
-    user_id: int,
     db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
 ):
     orders = await crud.get_orders_by_user(user_id, db)
     return orders
 
 # ########################### admin
 
-
 @router.get(
-    "/{user_id}",
+    "/user/{user_id}", 
     tags=["admin"],
     response_model=list[OrderOut],
+    dependencies=[Depends(require_admin)]
 )
 async def get_orders_user(
     user_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db)
 ):
     orders = await crud.get_orders_by_user(user_id, db)
     return orders
@@ -89,9 +87,8 @@ async def get_all_orders(
     orders = await crud.get_orders(skip=skip, limit=limit, session=db)
     return orders
 
-
 @router.get(
-    "/{order_id}",
+    "/order/{order_id}", 
     tags=["admin"],
     response_model=OrderOut,
     dependencies=[Depends(require_admin)]
@@ -107,10 +104,10 @@ async def get_order(
         )
     return order
 
-
 @router.put(
-    "/{order_id}",
+    "/order/{order_id}", 
     tags=["admin"],
+    response_model=OrderOut,
     dependencies=[Depends(require_admin)]
 )
 async def change_order(
@@ -126,9 +123,8 @@ async def change_order(
     changed_order = await crud.change_status(order_id, order_status, db)
     return changed_order
 
-
 @router.delete(
-    "/{order_id}",
+    "/order/{order_id}", 
     tags=["admin"],
     dependencies=[Depends(require_admin)]
 )

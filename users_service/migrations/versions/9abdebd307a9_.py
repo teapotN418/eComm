@@ -34,9 +34,18 @@ def upgrade():
     op.bulk_insert(users_table,
         [
             {
-                'email': 'admin@mail.ru',
+                'email': 'test_admin@mail.ru',
                 'hashed_password': '$2b$12$9ySzhh7jLaWCQ3pFi5c8j.aQZVq2RYfOzb6SJNyazkLkj4v2Kmmlu',
                 'role': 'admin'
+            }
+        ]
+    )
+    op.bulk_insert(users_table,
+        [
+            {
+                'email': 'test_user@mail.ru',
+                'hashed_password': '$2b$12$9ySzhh7jLaWCQ3pFi5c8j.aQZVq2RYfOzb6SJNyazkLkj4v2Kmmlu',
+                'role': 'user'
             }
         ]
     )
