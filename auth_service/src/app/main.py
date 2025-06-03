@@ -1,17 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
+import time
 
 import src.app.api.endpoints as endpoints
 from src.app.core.config import settings
+from src.app.core.monitoring import log_request, get_metrics
 
 tags_metadata = [
-    {"name": "no-auth", "description": "Operations for everyone"},
-    {"name": "authenticated", "description": "Operations for all authenticated"},
-    {"name": "admin", "description": "Operations for admins only"},
-]
-
-origins = [
-    "*",
+    {"name": "unauthorized", "description": "Operations for everyone"},
+    {"name": "authorized", "description": "Operations for authorized users only"},
+    {"name": "service", "description": "Service endpoints"}
 ]
 
 app = FastAPI(
@@ -19,15 +17,22 @@ app = FastAPI(
     description=settings.DESCRIPTION,
     version=settings.VERSION,
     openapi_tags=tags_metadata,
-    docs_url="/",
+    docs_url="/auth_docs",
+    openapi_url='/auth_openapi.json'
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["DELETE", "GET", "POST", "PUT"],
-    allow_headers=["*"],
-)
+
+@app.middleware("http")
+async def monitoring_middleware(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    response_time = time.time() - start_time
+    log_request(request, response_time, response.status_code)
+    return response
+
+
+@app.get("/metrics", tags=['service'])
+async def metrics():
+    return get_metrics()
 
 app.include_router(endpoints.router, prefix="/auth")

@@ -1,45 +1,174 @@
 version: '3.9'
 
 services:
+  # Minio
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: on-failure
+    ports:
+      - '${MINIO_CONSOLE}:9001'
+      - '${MINIO_PORT}:9000'
+    volumes:
+      - minio_data:/data
+      - ./minio_certs:/root/.minio/certs:ro
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    networks:
+      - monitoring
+    command: minio server /data --console-address :9001
+
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    restart: on-failure
+    ports:
+      - "${TRAEFIK_PORT}:80"
+      - "${TRAEFIK_SECURE_PORT}:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml:ro
+      - ./letsencrypt:/letsencrypt
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+    command:
+      - "--configFile=/traefik.yml"
+    networks:
+      - monitoring
+
+  minio_service:
+    container_name: minio_service
+    restart: on-failure
+    build:
+      context: ./minio_service
+    labels:
+      - "traefik.enable=true"
+
+      # Swagger
+      - "traefik.http.routers.minio_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/minio_docs`, `/minio_openapi.json`)"
+      - "traefik.http.routers.minio_docs.entrypoints=websecure"
+      - "traefik.http.routers.minio_docs.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio_docs.service=minio-service"
+
+      # /upload/file с авторизацией
+      - "traefik.http.routers.minio-upload.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/files/upload/file`)"
+      - "traefik.http.routers.minio-upload.entrypoints=websecure"
+      - "traefik.http.routers.minio-upload.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio-upload.middlewares=auth-middleware"
+      - "traefik.http.routers.minio-upload.service=minio-service"
+
+      # /get-url без авторизации
+      - "traefik.http.routers.minio-get-url.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/files/get-url`)"
+      - "traefik.http.routers.minio-get-url.entrypoints=websecure"
+      - "traefik.http.routers.minio-get-url.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio-get-url.service=minio-service"
+
+      # Сервис minio
+      - "traefik.http.services.minio-service.loadbalancer.server.port=8000"
+
+      # Middleware для авторизации через auth_service
+      - "traefik.http.middlewares.auth-middleware.forwardauth.address=http://auth_service:8000/auth/verify"
+      - "traefik.http.middlewares.auth-middleware.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.auth-middleware.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+    volumes:
+      - minio_logs:/var/log/minio_service
+    env_file:
+      - .env
+    # depends_on:
+    #   - minio
+    networks:
+      - monitoring
+
+  # Users/Auth
   auth_service:
     container_name: auth_service
+    restart: on-failure
     build:
       context: ./auth_service
-    ports:
-      - "${AUTH_PORT}:8000"
+    labels:
+      - "traefik.enable=true"
+
+      # Swagger
+      - "traefik.http.routers.auth_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/auth_docs`, `/auth_openapi.json`)"
+      - "traefik.http.routers.auth_docs.entrypoints=websecure"
+      - "traefik.http.routers.auth_docs.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.auth_docs.service=auth"
+
+      - "traefik.http.routers.auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.auth.service=auth"
+
+      - "traefik.http.routers.auth-public.rule=Host(`${TRAEFIK_HOST}`) && Path(`/auth/login`)"
+      - "traefik.http.routers.auth-public.entrypoints=websecure"
+      - "traefik.http.routers.auth-public.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.auth-public.service=auth"
+
+      - "traefik.http.services.auth.loadbalancer.server.port=8000"
     env_file:
       - .env
-#    volumes:
-#      - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
-#      - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
     depends_on:
       users_postgres:
         condition: service_healthy
+    networks:
+      - monitoring
+
   users_service:
     container_name: users_service
+    restart: on-failure
     build:
       context: ./users_service
-    ports:
-      - "${USERS_PORT}:8000"
+    labels:
+      - "traefik.enable=true"
+
+      # Swagger
+      - "traefik.http.routers.users_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/users_docs`, `/users_openapi.json`)"
+      - "traefik.http.routers.users_docs.entrypoints=websecure"
+      - "traefik.http.routers.users_docs.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.users_docs.service=users"
+
+      # Публичный маршрут /register — без авторизации
+      - "traefik.http.routers.users-public.rule=Host(`${TRAEFIK_HOST}`) && Path(`/users/register`)"
+      - "traefik.http.routers.users-public.entrypoints=websecure"
+      - "traefik.http.routers.users-public.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.users-public.service=users"
+
+      # Все остальные маршруты — с авторизацией через /verify
+      - "traefik.http.routers.users.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/users`)"
+      - "traefik.http.routers.users.entrypoints=websecure"
+      - "traefik.http.routers.users.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.users.middlewares=auth-middleware"
+      - "traefik.http.routers.users.service=users"
+
+      #  Middleware для авторизации
+      - "traefik.http.middlewares.auth-middleware.forwardauth.address=http://auth_service:8000/auth/verify"
+      - "traefik.http.middlewares.auth-middleware.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.auth-middleware.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+      - "traefik.http.services.users.loadbalancer.server.port=8000"
     env_file:
       - .env
-#    volumes:
-#      - ${CERTS_PATH}/fullchain.pem:/app/fullchain.pem:ro
-#      - ${CERTS_PATH}/privkey.pem:/app/privkey.pem:ro
     depends_on:
       users_postgres:
         condition: service_healthy
+    networks:
+      - monitoring
 
   users_postgres:
     container_name: users_postgres
     image: postgres:16.4-alpine3.20
-    ports:
-      - "${USERS_POSTGRES_PORT}:${USERS_POSTGRES_PORT}"
+    restart: on-failure
     volumes:
-      - ./mapped:/var/lib/postgresql/data
-    command: -p ${USERS_POSTGRES_PORT}
+      - users_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -p ${USERS_POSTGRES_PORT} -d ${USERS_POSTGRES_DB} -U ${USERS_POSTGRES_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -d ${USERS_POSTGRES_DB} -U ${USERS_POSTGRES_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,4 +176,361 @@ services:
       - POSTGRES_USER=${USERS_POSTGRES_USER}
       - POSTGRES_PASSWORD=${USERS_POSTGRES_PASSWORD}
       - POSTGRES_DB=${USERS_POSTGRES_DB}
-    
+    networks:
+      - monitoring
+
+  # Products
+  products_postgres:
+    image: debezium/postgres:15
+    container_name: products_postgres
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=${PRODUCTS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${PRODUCTS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${PRODUCTS_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${PRODUCTS_POSTGRES_DB} -U ${PRODUCTS_POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_replication_slots=4"
+      - "-c"
+      - "max_wal_senders=4"
+    volumes:
+      - products_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+
+  products_service:
+    container_name: products_service
+    restart: on-failure
+    build:
+      context: ./products_service
+    labels:
+      - "traefik.enable=true"
+
+      # Swagger
+      - "traefik.http.routers.products_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/products_docs`, `/products_openapi.json`)"
+      - "traefik.http.routers.products_docs.entrypoints=websecure"
+      - "traefik.http.routers.products_docs.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.products_docs.service=products-service"
+
+      # Middleware ForwardAuth
+      - "traefik.http.middlewares.products-auth.forwardauth.address=http://auth_service:8000/auth/verify"
+      - "traefik.http.middlewares.products-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.products-auth.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+      # unauthorized
+      - "traefik.http.routers.products-noauth.rule=Host(`${TRAEFIK_HOST}`) && (PathPrefix(`/products`) || PathPrefix(`/providers`) || PathPrefix(`/categories`))"
+      - "traefik.http.routers.products-noauth.entrypoints=websecure"
+      - "traefik.http.routers.products-noauth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.products-noauth.service=products-service"
+
+      # Authorized
+      - "traefik.http.routers.products-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/products`, `/providers`, `/categories`) && (Method(`POST`) || Method(`PUT`) || Method(`DELETE`))"
+      - "traefik.http.routers.products-auth.entrypoints=websecure"
+      - "traefik.http.routers.products-auth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.products-auth.middlewares=products-auth"
+      - "traefik.http.routers.products-auth.service=products-service"
+
+      - "traefik.http.services.products-service.loadbalancer.server.port=8000"
+    env_file:
+      - .env
+    depends_on:
+      products_postgres:
+        condition: service_healthy
+    networks:
+      - monitoring
+
+  # Orders
+  orders_postgres:
+    image: postgres:16.4-alpine3.20
+    container_name: orders_postgres
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=${ORDERS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${ORDERS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${ORDERS_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${ORDERS_POSTGRES_DB} -U ${ORDERS_POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - orders_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+
+  orders_service:
+    container_name: orders_service
+    restart: on-failure
+    build:
+      context: ./orders_service
+    labels:
+      - "traefik.enable=true"
+
+      # Swagger
+      - "traefik.http.routers.orders_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/orders_docs`, `/orders_openapi.json`)"
+      - "traefik.http.routers.orders_docs.entrypoints=websecure"
+      - "traefik.http.routers.orders_docs.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.orders_docs.service=orders-service"
+
+      # ForwardAuth для всех маршрутов, кроме no-auth
+      - "traefik.http.middlewares.orders-auth.forwardauth.address=http://auth_service:8000/auth/verify"
+      - "traefik.http.middlewares.orders-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.orders-auth.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+      # no-auth (без авторизации)
+      - "traefik.http.routers.orders-noauth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/cart`)"
+      - "traefik.http.routers.orders-noauth.entrypoints=websecure"
+      - "traefik.http.routers.orders-noauth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.orders-noauth.service=orders-service"
+
+      # authenticated и admin с ForwardAuth middleware
+      - "traefik.http.routers.orders-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/orders`)"
+      - "traefik.http.routers.orders-auth.entrypoints=websecure"
+      - "traefik.http.routers.orders-auth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.orders-auth.middlewares=orders-auth"
+      - "traefik.http.routers.orders-auth.service=orders-service"
+
+      # Сервис
+      - "traefik.http.services.orders-service.loadbalancer.server.port=8000"
+    env_file:
+      - .env
+    depends_on:
+      orders_postgres:
+        condition: service_healthy
+    networks:
+      - monitoring
+    volumes:
+      - orders_logs:/var/log/orders_service
+
+  # Reviews
+  reviews_postgres:
+    image: postgres:16.4-alpine3.20
+    container_name: reviews_postgres
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=${REVIEWS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${REVIEWS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${REVIEWS_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${REVIEWS_POSTGRES_DB} -U ${REVIEWS_POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - reviews_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+
+  reviews_service:
+    container_name: reviews_service
+    restart: on-failure
+    build:
+      context: ./reviews_service
+    labels:
+      - "traefik.enable=true"
+
+      # Swagger
+      - "traefik.http.routers.reviews_docs.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/reviews_docs`, `/reviews_openapi.json`)"
+      - "traefik.http.routers.reviews_docs.entrypoints=websecure"
+      - "traefik.http.routers.reviews_docs.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.reviews_docs.service=reviews-service"
+
+      # ForwardAuth middleware — проверяет авторизацию через auth_service
+      - "traefik.http.middlewares.reviews-auth.forwardauth.address=http://auth_service:8000/auth/verify"
+      - "traefik.http.middlewares.reviews-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.reviews-auth.forwardauth.authResponseHeaders=X-User-ID,X-User-Role"
+
+      # no-auth маршруты — без авторизации, отдельные роутеры для каждого PathPrefix
+      - "traefik.http.routers.reviews-noauth-products.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/reviews/product`)"
+      - "traefik.http.routers.reviews-noauth-products.entrypoints=websecure"
+      - "traefik.http.routers.reviews-noauth-products.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.reviews-noauth-products.service=reviews-service"
+
+      - "traefik.http.routers.reviews-noauth-users.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/reviews/user`)"
+      - "traefik.http.routers.reviews-noauth-users.entrypoints=websecure"
+      - "traefik.http.routers.reviews-noauth-users.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.reviews-noauth-users.service=reviews-service"
+
+      # authorized маршруты — требуют ForwardAuth
+      - "traefik.http.routers.reviews-auth.rule=Host(`${TRAEFIK_HOST}`) && PathPrefix(`/reviews`) && !PathPrefix(`/reviews/product`) && !PathPrefix(`/reviews/user`) && !PathPrefix(`/reviews_docs`, `/reviews_openapi.json`)"
+      - "traefik.http.routers.reviews-auth.entrypoints=websecure"
+      - "traefik.http.routers.reviews-auth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.reviews-auth.middlewares=reviews-auth"
+      - "traefik.http.routers.reviews-auth.service=reviews-service"
+
+      # сервис
+      - "traefik.http.services.reviews-service.loadbalancer.server.port=8000"
+    env_file:
+      - .env
+    depends_on:
+      reviews_postgres:
+        condition: service_healthy
+    networks:
+      - monitoring
+
+  # Kafka
+  zookeeper:
+    image: zookeeper:3.8
+    container_name: zookeeper
+    restart: on-failure
+    volumes:
+      - zookeeper-data:/data
+      - zookeeper-datalog:/datalog
+    networks:
+      - monitoring
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    restart: on-failure
+    environment:
+      KAFKA_BROKER_ID: 101
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms256M"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - monitoring
+    depends_on:
+      - zookeeper
+
+  # Debezium and elastic
+  connect:
+    image: debezium/connect:2.6
+    container_name: connect
+    restart: on-failure
+    environment:
+      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
+      CONNECT_REST_PORT: 8083
+
+      CONNECT_HEAP_OPTS: "-Xms512m -Xmx512m"
+
+      BOOTSTRAP_SERVERS: "kafka:9092" # Kafka
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+
+      # ВАЖНО! НЕ МЕНЯТЬ
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+
+      # плагины Elasticsearch и PostgreSQL
+      CONNECT_PLUGIN_PATH: "/kafka/connect,/kafka/connect/debezium-connector-postgres,/kafka/connect/plugins"
+    volumes:
+      - ./connector-plugins:/kafka/connect/plugins
+      - ./connector-configs:/tmp/configs
+    networks:
+      - monitoring
+    depends_on:
+      - products_postgres
+      - kafka
+
+  elasticsearch:
+    image: elasticsearch:7.17.10
+    container_name: elasticsearch
+    restart: on-failure
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - monitoring
+
+  # Logging
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: on-failure
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - monitoring
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: on-failure
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki:/etc/loki
+      - loki_data:/loki
+      - loki_wal:/wal
+    user: "root"
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: on-failure
+    volumes:
+      - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - minio_logs:/var/log/minio_service
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: on-failure
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  loki_data:
+  loki_wal:
+  grafana_data:
+  minio_logs:
+  minio_data:
+  users_data:
+  products_data:
+  zookeeper-data:
+  zookeeper-datalog:
+  kafka-data:
+  esdata:
+  orders_logs:
+  orders_data:
+  reviews_data:

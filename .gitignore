@@ -3,6 +3,7 @@
 data
 default_database_data
 test_database_data
+mapped/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -21,7 +22,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -134,3 +134,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+connector-configs
+connector-plugins
+minio_certs
