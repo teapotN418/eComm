@@ -1,9 +1,6 @@
 entryPoints:
   web:
     address: ":80"
-
-  dashboard:
-    address: ":8082"
   
   websecure: 
     address: ":443"
