@@ -4,14 +4,14 @@ import pytest
 @pytest.fixture()
 async def test_user_data():
     return {
-        "email": "user@mail.ru",
+        "email": "test_user@mail.ru",
         "password": "12345"
     }
 
 @pytest.fixture()
 async def test_admin_data():
     return {
-        "email": "admin@mail.ru",
+        "email": "test_admin@mail.ru",
         "password": "12345"
     }
 
@@ -48,7 +48,7 @@ async def test_cookies(authed_client):
 async def test_wrong_login(client):
     response = await client.post(
         "/auth/login",
-        json={"email": "123@mail.ru", "password": "abcder"}
+        json={"email": "p12fh39b82f@mail.ru", "password": "130mfn23f"}
     )
     assert response.status_code == 401
 
@@ -110,6 +110,7 @@ async def test_logout(authed_client):
     response = await authed_client.post(
         "/auth/logout"
     )
+    assert response.status_code==200
     authed_client.cookies = response.cookies
     assert not security_config.JWT_ACCESS_COOKIE_NAME in authed_client.cookies
     assert not security_config.JWT_REFRESH_COOKIE_NAME in authed_client.cookies

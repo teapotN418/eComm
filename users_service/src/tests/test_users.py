@@ -4,7 +4,7 @@ import pytest
 @pytest.fixture()
 async def test_user_data():
     return {
-        "email": "test@mail.ru",
+        "email": "21ov7f6g@mail.ru",
         "password": "12345"
     }
 
@@ -17,8 +17,8 @@ async def register_user(client: AsyncClient, test_user_data: dict):
     assert response.status_code == 200
     return response
 
-async def test_create_user(register_user):
-    assert register_user.json()["email"] == "test@mail.ru"
+async def test_create_user(register_user, test_user_data):
+    assert register_user.json()["email"] == test_user_data["email"]
     assert register_user.json()["role"] == "user"
 
 async def test_user_id(client, register_user):
@@ -84,7 +84,7 @@ async def test_admin_users(client, register_user, test_user_data):
     response = await client.post("/users", json=test_data)
     assert response.status_code == 409
 
-    test_data["email"] = "another@mail.ru"
+    test_data["email"] = "3h4gv0hrg3wri@mail.ru"
     response = await client.post("/users", json=test_data)
     assert response.status_code == 200
 
