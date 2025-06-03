@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Request, Response
-from starlette.middleware.cors import CORSMiddleware
 import time
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
@@ -8,11 +7,9 @@ from src.app.core.config import settings
 from src.app.core.monitoring import log_request
 
 tags_metadata = [
-    {"name": "no-auth", "description": "Operations for everyone"},
-]
-
-origins = [
-    "*",
+    {"name": "unauthorized", "description": "Operations for everyone"},
+    {"name": "admin", "description": "Operations for admin only"},
+    {"name": "service", "description": "Service endpoints"}
 ]
 
 app = FastAPI(
@@ -20,16 +17,10 @@ app = FastAPI(
     description=settings.DESCRIPTION,
     version=settings.VERSION,
     openapi_tags=tags_metadata,
-    docs_url="/",
+    docs_url="/minio_docs",
+    openapi_url='/minio_openapi.json'
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["DELETE", "GET", "POST", "PUT"],
-    allow_headers=["*"],
-)
 
 @app.middleware("http")
 async def monitoring_middleware(request: Request, call_next):
@@ -39,7 +30,8 @@ async def monitoring_middleware(request: Request, call_next):
     log_request(request, response_time, response.status_code)
     return response
 
-@app.get("/metrics")
+
+@app.get("/metrics", tags=['service'])
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
